@@ -9,16 +9,6 @@ const photo = recipe => window.KitchenPhoto.source(recipe);
 const countLabel = (count, noun) => count + ' ' + noun + (count === 1 ? '' : 's');
 const statusNames = { pending: 'In review', approved: 'Published', rejected: 'Declined' };
 
-function hasEarlierAccount() {
-  if (!['ready','refreshing'].includes(kitchen().service?.().phase)) return false;
-  try {
-    for (let index = 0; index < localStorage.length; index++) {
-      if (localStorage.key(index)?.startsWith('supperclub.v1/accounts/')) return true;
-    }
-  } catch { /* Storage access is optional. */ }
-  return false;
-}
-
 function PageHeading({ title, children, action }) {
   return <div className="ac-heading">
     <div><h1>{title}</h1>{children && <p>{children}</p>}</div>{action}
@@ -41,7 +31,6 @@ function Gate({ admin = false, user, go }) {
 export function AuthPage({ mode, go, completeLogin }) {
   const signup = mode === 'signup';
   const [receipt] = useState(() => signup ? null : kitchen().recentSignup());
-  const [showAccountNotice] = useState(hasEarlierAccount);
   const [name,setName] = useState('');
   const [email,setEmail] = useState(receipt?.email || '');
   const [password,setPassword] = useState('');
@@ -89,7 +78,6 @@ export function AuthPage({ mode, go, completeLogin }) {
         {receipt
           ? <p className="ac-auth-success" role="status"><strong>Congratulations, {receipt.name}!</strong> Your account is ready. Sign in with the email and password you just registered.</p>
           : <p className="ac-intro">{signup ? 'Create an account to build your cookbook and share what you cook.' : 'Sign in to open your cookbook and pick up where you left off.'}</p>}
-        {showAccountNotice && !receipt && <p className="ad-account-notice">Used the older app on this laptop? Register a shared account once to sign in on other devices.</p>}
         <form className="ac-form" onSubmit={authenticate}>
           {signup && <label>Your name<input autoComplete="name" required maxLength={80} value={name} onChange={e => setName(e.target.value)} /></label>}
           <label>Email address<input name="email" type="email" autoComplete="username" maxLength={254} required value={email} onChange={e => setEmail(e.target.value)} /></label>

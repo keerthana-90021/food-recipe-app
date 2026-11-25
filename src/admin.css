@@ -1,5 +1,4 @@
 .ad-workspace { padding-block:clamp(1.5rem,4vw,3rem) 4rem; }
-.ac-auth-form .ad-account-notice { padding:.65rem .85rem; margin:.75rem 0 1rem; font-size:.87rem; line-height:1.5; color:#465942; background:#edf1e6; border-radius:7px; }
 .ad-masthead { display:flex; align-items:center; justify-content:space-between; gap:1.2rem; border-radius:18px; padding:clamp(1.4rem,4vw,3rem); color:#fff7df; background:radial-gradient(ellipse at 100% 0%,#416248,transparent 65%),#17392b; }
 .ad-masthead .ad-masthead-copy { max-width:48rem; }
 .ad-masthead-copy p { display:flex; align-items:center; gap:.55rem; text-transform:uppercase; letter-spacing:.13em; color:#f4ca96; font-size:.74rem; font-weight:750; }
