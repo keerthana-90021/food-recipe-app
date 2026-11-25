@@ -366,3 +366,10 @@ button:disabled { cursor:default }
 html[data-reduce-motion] *,html[data-reduce-motion] *::before,html[data-reduce-motion] *::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }
 html[data-reduce-motion] .card-photo a:hover img,html[data-reduce-motion] .recipe-card:hover { transform:none; }
 
+@media (prefers-reduced-motion:no-preference) {
+  html:not([data-reduce-motion]) .route-surface { animation:kitchen-page-arrive 160ms ease-out; }
+  @keyframes kitchen-page-arrive { from { opacity:.78; } to { opacity:1; } }
+}
+.detail-actions button:disabled, .rating-stars button:disabled,
+.ac-chip-action:disabled, .ac-inline-form button:disabled { cursor:progress; opacity:.7; }
+

@@ -23,9 +23,9 @@ function searchCriteria(query) {
 
 export function FoodImage({recipe, eager=false}) {
   const [failedImage, setFailedImage] = useState(null);
-  if (recipe.image && failedImage !== recipe.image) {
-    return <img src={window.SupperclubPhotos?.[recipe.image] || './images/' + encodeURIComponent(recipe.image)}
-      alt={recipe.title} loading={eager ? 'eager' : 'lazy'} onError={() => setFailedImage(recipe.image)}/>;
+  const src = window.KitchenPhoto.source(recipe);
+  if (src && failedImage !== src) {
+    return <img src={src} alt={recipe.title} loading={eager ? 'eager' : 'lazy'} onError={() => setFailedImage(src)}/>;
   }
   return <div className="food-placeholder">
     <span className="placeholder-label"><Icon name="leaf" size={16}/>Ingredients</span>
@@ -73,6 +73,7 @@ export function RecipeCard({recipe, openRecipe, toggleSave}) {
   const store = window.KitchenStore;
   const saved = store.isSaved(recipe.id);
   const [celebrate, setCelebrate] = useState(false);
+  const [saving, setSaving] = useState(false);
   const rating = store.rating(recipe.id);
   const href = '#recipe/' + encodeURIComponent(recipe.id);
   return <article className="recipe-card">
@@ -85,9 +86,13 @@ export function RecipeCard({recipe, openRecipe, toggleSave}) {
       }}><FoodImage recipe={recipe}/></a>
       <button className={'save-icon' + (saved ? ' saved' : '') + (celebrate && saved ? ' just-saved' : '')}
         aria-label={(saved ? 'Unsave ' : 'Save ') + recipe.title} aria-pressed={saved}
-        onAnimationEnd={() => setCelebrate(false)} onClick={() => {
-          toggleSave(recipe.id);
-          setCelebrate(!saved && store.isSaved(recipe.id));
+        disabled={saving} onAnimationEnd={() => setCelebrate(false)} onClick={async () => {
+          if (saving) return;
+          setSaving(true);
+          try {
+            await toggleSave(recipe.id);
+            setCelebrate(!saved && store.isSaved(recipe.id));
+          } finally { setSaving(false); }
         }}><Icon name="bookmark" size={17} fill={saved}/></button>
     </div>
     <div className="card-body">

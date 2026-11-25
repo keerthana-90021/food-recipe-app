@@ -29,6 +29,7 @@ function browser() {
     TextEncoder, TextDecoder, btoa, atob, console});
   context.window = context;
   vm.runInContext(catalogSource, context);
+  vm.runInContext(source('public/shared/photo.js'), context);
   vm.runInContext(storeSource, context);
   return {store:context.KitchenStore, recipes:context.KitchenSeeds, localStorage};
 }
@@ -75,7 +76,9 @@ test('rejection, revision and approval preserve the recipe link and enforce loca
   await store.signup('Reviewer Cook','cook@example.test',password);
   await store.login('cook@example.test',password);
   assert.throws(() => store.submitRecipe({...curry,diet:['Vegan','Non-vegetarian']}));
-  const recipe = store.submitRecipe(curry);
+  assert.throws(() => store.submitRecipe({...curry,photo:'data:image/jpeg;base64,/9j/AAAA'}),/valid recipe photo/);
+  const photo = 'data:image/jpeg;base64,' + readFileSync(new URL('public/images/masala-dosa.jpg',root)).toString('base64');
+  const recipe = store.submitRecipe({...curry,photo});
   const status = () => store.recipes().find(r => r.id===recipe.id)?.status;
   assert.equal(status(),'pending');
   assert.throws(() => store.moderate(recipe.id,'approved'));
@@ -88,6 +91,7 @@ test('rejection, revision and approval preserve the recipe link and enforce loca
   await store.login('cook@example.test',password);
   const revised = store.resubmitRecipe(recipe.id,{...curry,description:'Now includes exact quantities.'},declined.revision);
   assert.equal(revised.id,recipe.id);
+  assert.equal(revised.photo,photo);
   assert.equal(status(),'pending');
   store.logout();
   await store.login('admin@supperclub.test','KitchenAdmin27!');
@@ -95,6 +99,8 @@ test('rejection, revision and approval preserve the recipe link and enforce loca
   const approved = store.moderate(recipe.id,'approved','',revised.revision);
   const link = store.shareToken(recipe.id);
   assert.equal(browser().store.readShare(link).status,'shared');
+  assert.ok(link.length < 2000);
+  assert.equal(browser().store.readShare(link).photo,undefined);
   store.moderate(recipe.id,'rejected','Withdrawn for correction.',approved.revision);
   store.logout();
   assert.equal(status(),undefined);

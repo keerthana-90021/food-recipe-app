@@ -1,72 +1,55 @@
-# Supperclub · Food Recipe App
+# Supperclub
 
-Supperclub helps home cooks answer “What can I make with what I have?” A cook can look up an ingredient, narrow the results by cuisine or diet, follow the preparation steps, and save a dish for another day. Cooks can also submit a recipe for an administrator to review before it appears in the catalogue.
+Supperclub helps home cooks find something to make with the ingredients they have. Its 46 recipes span nine cuisines, including Indian, Italian, Mexican, Chinese, Japanese and Korean. Thirteen recipes feature meat, poultry or seafood.
 
-## Run the project
+## Choose an edition
 
-The project root is the directory containing `package.json`. Install Node.js 22.12 or newer with npm and run these commands from that directory.
+| Edition | Open | Data and access |
+| --- | --- | --- |
+| Final review | `/` | React and Vite with the same-origin `/api/kitchen` service. On a configured Vercel deployment, cooks on different devices can sign in, submit recipes and see the same approved catalogue. Admin credentials are private to the deployment. |
+| Review 2 classroom | `/?edition=classroom` | The hosted React and Vite app uses Local Storage for signup, login, user data and moderation. Use this link to demonstrate the Review 2 Local Storage requirement. |
+| Review 1 | `/review-1/` | Framework-free HTML, CSS Grid/Flexbox and JavaScript. Signup, login, role navigation, collections, ratings and moderation use this browser profile's Local Storage. |
+| Offline demonstration | `dist/Open-Supperclub.html` in a packaged release, when included | Open the extracted HTML file to demonstrate the browser-local cookbook. The file has no connection to the online community. |
+
+The hosted editions use the same production domain. The Vercel dashboard shows which GitHub commit is serving that domain. [Shared final site](https://food-recipe-app-wheat-alpha.vercel.app/) · [React classroom site](https://food-recipe-app-wheat-alpha.vercel.app/?edition=classroom) · [Review 1 site](https://food-recipe-app-wheat-alpha.vercel.app/review-1/) · [Vercel project](https://vercel.com/desalakeerthana1503-7536/food-recipe-app) · [GitHub source](https://github.com/keerthana-90021/food-recipe-app)
+
+## Run locally
+
+Use Node.js 22.12 or newer. Run these commands from the project directory containing `package.json`.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open the local URL printed by Vite. The server hosts both review editions.
+Open the address Vite prints. The local service keeps test accounts, submissions and photos in the private, Git-ignored `.kitchen-dev/` directory. Refreshes and server restarts preserve this data. Regular tester signup works without configuring an administrator. For the local admin queue, copy `.env.example` to `.env.local`. Uncomment `SUPPERCLUB_DEV_ADMIN_EMAIL` and `SUPPERCLUB_DEV_ADMIN_PASSWORD`, fill in your own values, then restart Vite. Use a unique password of at least 15 characters.
 
-| Review | URL path | Implementation |
-| --- | --- | --- |
-| Review 1 | `/review-1/` | HTML, CSS Grid/Flexbox and plain JavaScript, including role-based navigation. The entry point is `public/review-1/index.html`. |
-| Review 2 | `/` | React components and JavaScript navigation, built and served with Vite. The components are in `src/`. |
+Run `npm test` for the automated checks. Run `npm run build`, then `npm run preview` to exercise the production frontend against the local review service. For the final review use the same hosted HTTPS address on every device.
 
-To check a production build locally, run `npm run build`, then `npm run preview` and open the address it prints. In the downloadable review package, you can also double-click `dist/Open-Supperclub.html` after extracting it. This standalone React preview includes the photography, styles, and scripts in the HTML file. Use the hosted version to demonstrate share links that other people can open from their devices.
+## Configure the Vercel project
 
-## Modules
+1. Open the existing **food-recipe-app** project. In **Storage**, select **Create Database**, choose **Upstash for Redis**, and connect a project-specific Redis database to this project's **Production** environment. If a dedicated database is already connected, reuse it. For a free review deployment, select the free plan only when it is offered. [Project storage](https://vercel.com/desalakeerthana1503-7536/food-recipe-app/stores) · [Redis on Vercel](https://vercel.com/docs/redis)
+2. Under **Settings → Environment Variables**, check the names below. Use either complete Redis pair with a token that allows writes. Set the admin email and a private password of at least 15 characters. Store the Redis token and admin password as secrets. All four values belong to the server. A `VITE_` prefix would expose a value to frontend code. [Project environment variables](https://vercel.com/desalakeerthana1503-7536/food-recipe-app/settings/environment-variables) · [Upstash REST credentials](https://upstash.com/docs/redis/features/restapi)
+3. Confirm the linked GitHub repository, the **Vite** framework preset, `npm run build`, `dist`, and the root containing both `package.json` and `api/`. Deploy the commit with the backend. After changing environment variables, redeploy so the next production deployment receives them. Uploading `dist/` alone omits the API. [GitHub repository](https://github.com/keerthana-90021/food-recipe-app) · [Vercel environment changes](https://vercel.com/docs/environment-variables/managing-environment-variables)
+4. Open **Visit** on the production deployment. From one browser, register a new cook, sign in and submit a dish. From another, sign in with the private admin account, inspect the submission and approve it. Open its link in a signed-out third browser to verify publication.
 
-The [review checklist and demo questions](docs/REVIEW.md) map both editions to the course requirements. Run `npm test` to check the catalogue, account isolation, ratings and moderation before the demonstration.
-
-| Role | What the reviewer can do |
+| Server variable | Value |
 | --- | --- |
-| Guest | Browse the catalogue, search by ingredient, filter by cuisine or dietary preference, and follow a recipe one step at a time in Cook mode in the React edition. |
-| User | Save dishes, organize collections, rate or share a recipe, and revise a declined submission. In the React edition, plan meals by date, check off groceries, and resume cooking steps or a kitchen timer after a refresh. |
-| Admin | Review a submission, publish it, or send it back to the author with feedback. An author can correct the same recipe and return it to the queue. |
+| `UPSTASH_REDIS_REST_URL` or `KV_REST_API_URL` | HTTPS REST endpoint for the project's Redis database |
+| `UPSTASH_REDIS_REST_TOKEN` or `KV_REST_API_TOKEN` | Corresponding standard read/write REST token |
+| `SUPPERCLUB_ADMIN_EMAIL` | Private administrator email for the hosted site |
+| `SUPPERCLUB_ADMIN_PASSWORD` | Private administrator password for the hosted site |
 
-Choose **Create an account** and confirm a passphrase of at least 15 characters. After the account confirmation, sign in using the prefilled email and your passphrase. Existing accounts can use their original password.
+## Modules and accounts
 
-**Reviewer admin account**
+A **guest** can browse, filter dishes, draw a suggestion from the filtered results, open preparation steps and use Cook mode. A **cook** can sign up, confirm a passphrase, sign in, save recipes into collections, rate them, plan meals, tick a shopping list and submit recipes for review. A submission can include a JPEG, PNG or WebP photo up to 10 MB, which the browser resizes before sending. An **admin** can inspect submissions and photos, publish or return recipes, edit or delete catalogue entries and manage registered cooks.
 
-| Email | Password |
-| --- | --- |
-| `admin@supperclub.test` | `KitchenAdmin27!` |
+The hosted final shares accounts, approved dishes, submitted photos, moderation, saved collections and ratings across devices. Meal plans, shopping checks, motion preferences and cooking progress stay with their browser.
 
-## How it works
+For the React classroom edition, Review 1 and the packaged offline demo, the classroom admin email is `admin@supperclub.test` and the password is `KitchenAdmin27!`. The two hosted classroom editions share this browser's local accounts and recipes when opened on the same origin. The shared final at `/` uses its own account directory and the private administrator configured in Vercel.
 
-Both editions use the recipe catalogue and browser data API in `public/shared/`. The seeded dishes supply the initial catalogue. JavaScript reads the URL fragment to select the active screen and checks the session before opening account or admin functionality. CSS Grid arranges recipe cards, while Flexbox aligns controls and accommodates smaller screens.
+## Previously submitted recipes
 
-The shared store uses Local Storage for accounts, the active session, collection memberships, individual votes, and submitted recipes. Passwords are salted and hashed with the browser's Web Crypto API. Signing out ends the session while keeping saved data. Updating a rating replaces the user's previous vote. The submission states are pending, approved, and rejected.
+A recipe entered in the earlier browser-only app lives on the original browser profile and site origin. On that same browser, sign in to the hosted final app as the private admin, open the submission queue and select **Import from this browser**. Choose a dish. The imported recipe is credited to the importing admin and enters the pending queue. Review it before publishing. Older browser passwords and demo admin privileges stay in the earlier edition. A returning cook can create an account in the hosted edition.
 
-Each browser profile and site origin has its own records. For the moderation demonstration, switch accounts in **the same browser profile at the same URL origin**. A pristine browser starts with the seeded catalogue. Links to community recipes can carry a read-only copy of the recipe for a recipient. The published site serves a client-side classroom demo with administration and storage in the visitor's browser.
-
-## Five-minute review walkthrough
-
-1. **Discovery.** Open the home page. Search for an ingredient from one of the recipe cards, try a cuisine or dietary filter, then open a recipe and show its ingredients and numbered steps.
-2. **Personalization.** Register and sign in. Save a dish to your cookbook, then schedule it for dinner in the meal planner. Open the shopping list, check off an ingredient, and refresh to show that the plan and checklist were saved.
-3. **Participation.** Rate a recipe and change the rating once. Submit a dish with a title, cuisine, time, servings, ingredients, and instructions. Show its review status.
-4. **Moderation.** Sign out and log in with the reviewer Admin account above. Open the pending submission and approve it.
-5. **Verification.** Sign out, find the newly approved dish as a guest, and open its share link. Visit `/review-1/` at the same origin to demonstrate the plain JavaScript edition using the same data.
-
-For a quick submission, try **Cumin potatoes**. Choose Indian cuisine, set 15 minutes and two servings, and enter the following ingredients and steps on separate lines.
-
-| Ingredients | Preparation steps |
-| --- | --- |
-| 2 cooked potatoes, cubed | Warm the oil in a pan and toast the cumin until fragrant. |
-| 1 tsp oil | Add the potatoes and salt. Stir occasionally until the edges turn golden. |
-| ½ tsp cumin seeds | Serve warm. |
-| Salt to taste | |
-
-For a second discovery example, select **Non-vegetarian** and choose **Korean** from the cuisine dropdown. Use **Surprise me** to pick from the current results. The footer has a motion preference for the animated controls.
-
-## GitHub and Vercel
-
-Push the source directory containing `package.json` and `package-lock.json` to the project’s GitHub repository. Keep `node_modules` out of source control.
-
-To deploy from GitHub, import that repository as a new Vercel project. Select the directory containing `package.json` as the root, choose the **Vite** framework preset, use **npm run build** for the build command, and **dist** for the output directory. Deploy, open the assigned production URL, and verify both `/` and `/review-1/`. Bring the repository link and the production deployment link to the review. [Vercel’s Vite guide](https://vercel.com/docs/frameworks/frontend/vite)
+For a short demonstration, sample submission and reviewer questions, see the [review guide](docs/REVIEW.md).

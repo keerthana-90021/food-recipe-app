@@ -794,3 +794,6 @@ footer {
 .review-feedback { width:100%; margin-top:.4rem; }
 .review-note { margin:1rem 0; padding:.8rem 1rem; border-inline-start:3px solid #ad7246; background:#f7efe4; color:#483c2c; }
 .review-note p,.review-actions p { overflow-wrap:anywhere; }
+.classic-photo { display:grid; justify-items:start; gap:.5rem; }
+.classic-photo [hidden] { display:none; }
+.classic-photo .dish-preview { width:min(100%,21rem); height:11rem; border-radius:.65rem; object-fit:cover; }

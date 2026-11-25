@@ -16,12 +16,23 @@ function RecipeView({recipe,token,toggleSave,notify,user,requireLogin,refresh}) 
   const {checked,done} = progress;
   const [shareUrl,setShareUrl] = useState('');
   const [shareText,setShareText] = useState('');
+  const [ratingPending,setRatingPending] = useState(false);
+  const [saving,setSaving] = useState(false);
   const snapshot = recipe.status==='shared';
   const saved = !snapshot && store.isSaved(recipe.id);
   const score = snapshot ? null : store.rating(recipe.id);
-  function rate(stars) {
+  async function rate(stars) {
     if(!user){requireLogin();return;}
-    try {store.rate(recipe.id,stars);refresh();notify('Your rating has been saved.');} catch(error){notify(error.message);}
+    if(ratingPending)return;
+    setRatingPending(true);
+    try {await store.rate(recipe.id,stars);refresh();notify('Your rating has been saved.');}
+    catch(error){notify(error.message);}
+    finally {setRatingPending(false);}
+  }
+  async function bookmark() {
+    if(saving)return;
+    setSaving(true);
+    try {await toggleSave(recipe.id);} finally {setSaving(false);}
   }
   async function share() {
     try {
@@ -31,7 +42,7 @@ function RecipeView({recipe,token,toggleSave,notify,user,requireLogin,refresh}) 
         try{await navigator.clipboard.writeText(text);notify('Recipe copied for sharing.');}catch{notify('Select and copy the recipe below.');}
         return;
       }
-      const snapshotToken = snapshot ? token : store.shareToken(recipe.id);
+      const snapshotToken = snapshot ? token : await store.shareToken(recipe.id);
       const url=new URL(window.location.href);
       url.hash='recipe/'+encodeURIComponent(recipe.id)+(snapshotToken?'?shared='+snapshotToken:'');
       setShareUrl(url.href);
@@ -56,7 +67,7 @@ function RecipeView({recipe,token,toggleSave,notify,user,requireLogin,refresh}) 
         {!!recipe.diet?.length && <div className="diet-list">{recipe.diet.map(d=><span key={d}>{d}</span>)}</div>}
         {snapshot && <p className="snapshot-note">Shared recipe from {recipe.author}’s cookbook.</p>}
         <div className="detail-actions">
-          {!snapshot && <button className="green-button button" aria-pressed={saved} onClick={()=>toggleSave(recipe.id)}><Icon name="bookmark" size={17} fill={saved}/>{saved?'Saved to cookbook':'Save recipe'}</button>}
+          {!snapshot && <button className="green-button button" disabled={saving} aria-pressed={saved} onClick={bookmark}><Icon name="bookmark" size={17} fill={saved}/>{saved?'Saved to cookbook':'Save recipe'}</button>}
           <button className="outline-button button" onClick={share}><Icon name="share" size={17}/>Share recipe</button>
           {!snapshot && <PlanRecipeButton {...{recipe,user,requireLogin,notify}}/>}
         </div>
@@ -71,7 +82,15 @@ function RecipeView({recipe,token,toggleSave,notify,user,requireLogin,refresh}) 
       <section className="method-panel"><div className="method-heading"><h2>Step by step</h2><CookMode {...{recipe,progress,notify}}/></div>
         <ol>{recipe.steps.map((step,i)=><li key={i}><button className={'step-number'+(done.includes(i)?' complete':'')} onClick={()=>progress.toggleStep(i)} aria-label={'Mark step '+(i+1)+(done.includes(i)?' incomplete':' complete')} aria-pressed={done.includes(i)}>{done.includes(i)?<Icon name="check" size={17}/>:i+1}</button><p>{step}</p></li>)}</ol>
         {(checked.length > 0 || done.length > 0 || progress.timer) && <div className="cook-reset"><span>{done.length} of {recipe.steps.length} steps completed</span><button type="button" onClick={()=>{progress.reset();notify('Cooking progress reset.');}}>Reset cooking session</button></div>}
-        {!snapshot && <div className="rating-panel"><h3>Rate this recipe</h3><p>{score.mine?'Your rating: '+score.mine+' out of 5.':'How did it turn out?'}</p><div className="rating-stars" aria-label="Rate recipe">{[1,2,3,4,5].map(n=><button key={n} aria-label={'Rate '+n+' out of 5'} aria-pressed={score.mine===n} onClick={()=>rate(n)}><Icon name="star" size={28} fill={n<=score.mine}/></button>)}</div></div>}
+        {!snapshot && <div className="rating-panel">
+          <h3>Rate this recipe</h3>
+          {score?.count == null ? <p>Ratings will be available when the shared kitchen reconnects.</p> : <>
+            <p>{score.mine ? 'Your rating: '+score.mine+' out of 5.' : 'How did it turn out?'}</p>
+            <div className="rating-stars" aria-label="Rate recipe" aria-busy={ratingPending}>
+              {[1,2,3,4,5].map(n => <button key={n} disabled={ratingPending} aria-label={'Rate '+n+' out of 5'} aria-pressed={score.mine===n} onClick={()=>rate(n)}><Icon name="star" size={28} fill={n<=score.mine}/></button>)}
+            </div>
+          </>}
+        </div>}
       </section>
     </div>
   </main>;

@@ -1,44 +1,44 @@
 # Supperclub project review
 
-## Problem and business system
+## Problem and system
 
-A home cook needs to find a recipe that fits their ingredients, diet, and available time, then remember what to buy and how to prepare it. Supperclub combines a searchable cookbook, personal meal planning, and a review queue for recipes submitted by cooks.
+A home cook needs a recipe that fits their ingredients, diet and available time. They also need to remember what to buy, follow a preparation method and share a dish. Supperclub combines recipe discovery, a personal cookbook and a moderated community catalogue.
 
 ## Evaluation checklist
 
 | Requirement | Where to demonstrate it |
 | --- | --- |
-| Review 1 uses only HTML, CSS, and JavaScript | Open `/review-1/`. Its HTML loads the local catalogue, shared JavaScript store, and plain JavaScript controller. The responsive template uses CSS Grid and Flexbox. |
-| Review 2 uses React and Vite | Open `/`. React components render the catalogue, recipe detail, user account, planner, and review screens. Run `npm ci` and `npm run build` from the project root to reproduce the Vite production build. |
-| User module, Admin module, and navigation | Register a cook, then sign in and open My cookbook. An admin signs in to the review queue. Both editions check the active session and role when navigating to a protected page. |
-| Signup and login with Local Storage | Register with a sample email and confirmed passphrase. The confirmation page prefills the email for a separate sign-in. Refresh after signing in, then sign out and verify saved recipes reappear on the next login. |
-| Browse, search, and follow recipes | Select a cuisine, combine it with an ingredient search or dietary filter, and open a result. The detail page shows quantities, servings, total time, and preparation steps. |
-| Save, collect, share, submit, and rate | Bookmark a dish, add it to a named collection, change a star rating, copy a recipe link, and submit a new dish for admin review. Publishing adds it to the current origin's catalogue. |
-| Meal planning | In the React edition, plan breakfast, lunch, or dinner for a specific date. Selecting another week changes the plan and shopping list. Check off an item and reload. |
-| GitHub source and Vercel deployment | Open the repository's latest commit on `main` and its Vercel deployment check. Use **Visit** on the deployment to open the live app. Append `/review-1/` to that same site's base URL for the classic edition. [GitHub repository](https://github.com/keerthana-90021/food-recipe-app) |
+| HTML, CSS, JavaScript, Grid/Flexbox | Open `/review-1/`. Its HTML loads the catalogue, local data store and plain JavaScript controller. Inspect the responsive card grid and flexible navigation. |
+| React and Vite | Open `/?edition=classroom` for the Review 2 React demonstration, then `/` for the shared final. Both use React components for the catalogue, account, detail, planner and admin screens. Reproduce the frontend with `npm ci` and `npm run build`. |
+| Admin and User modules, JavaScript redirection | Sign in as a cook and open My cookbook, then use an admin account in another browser to open the submission queue. Try accessing the administration page as a cook. |
+| Local Storage signup and login | Register and sign in at `/review-1/` for Review 1 and `/?edition=classroom` for Review 2. Inspect this origin's Local Storage, sign out and sign back in. For the shared final at `/`, demonstrate server-backed identity and a session cookie. [React classroom site](https://food-recipe-app-wheat-alpha.vercel.app/?edition=classroom) |
+| Discovery and preparation | Combine cuisine, dietary preferences and ingredient search. Open a recipe to show quantities, servings and numbered steps. |
+| Save, collect, rate, share and submit | Save a recipe, add it to a named collection, revise a rating and submit a dish for moderation. Share its published link with a fresh browser. |
+| Meal planning and guided cooking | In the React edition, schedule a dish by date and meal, check a shopping item, start a kitchen timer and resume the next unfinished step. |
+| Source and deployment | Open the site and match its production deployment in Vercel to the source commit on GitHub. [Final site](https://food-recipe-app-wheat-alpha.vercel.app/) · [Review 1 site](https://food-recipe-app-wheat-alpha.vercel.app/review-1/) · [Repository](https://github.com/keerthana-90021/food-recipe-app) · [Vercel project](https://vercel.com/desalakeerthana1503-7536/food-recipe-app) |
 
 ## A five-minute demonstration
 
-1. **Find dinner.** Filter for Japanese cuisine and non-vegetarian recipes. Open *Skillet Teriyaki Salmon*. Show the ingredient quantities and ordered steps.
-2. **Become a member.** Sign up, show the confirmation, and sign in to the same account. Save the recipe, create a collection called *Weeknight dinners*, and add the dish to it.
-3. **Plan and cook.** Schedule the dish for Friday dinner, tick a shopping item, and refresh. Open Cook mode, start the kitchen timer, and complete the first step. Close and reopen Cook mode to resume.
-4. **Review a contribution.** Submit a new recipe and sign in with the reviewer admin account listed in the README. Read the ingredients and method. Request a correction with feedback, sign back in as the cook to revise it, then approve the resubmission as admin.
-5. **Verify sharing.** Open an approved community recipe, copy its link, and paste it into another browser profile. The recipient can read the recipe. Return to the original browser and open `/review-1/` to demonstrate the framework-free edition.
-
-## Changes since the 34-recipe edition
-
-- Both editions now have 46 built-in recipes across nine cuisines. Thirteen carry the Non-vegetarian tag. The twelve additions cover chicken, beef, shrimp, and fish across Indian, Italian, Mexican, Chinese, Japanese, and Korean cuisines.
-- A submission can now identify meat or egg dishes. Both editions reject contradictory dietary labels. Admins can return a dish with feedback, cooks can revise it, and admins can withdraw a previously approved dish from this browser's catalogue.
-- The React edition adds a filter-aware **Surprise me** picker and a **Reduce motion** preference. Cook mode remembers ingredient checks, completed steps, and a running or paused timer across a refresh.
+1. **Find dinner.** Select Japanese and Non-vegetarian. Open *Skillet Teriyaki Salmon*, or use **Surprise me** to draw one of the matching dishes. Point out the quantities and steps.
+2. **Register and cook.** Create a cook account, show the confirmation, and explicitly sign in. Save the dish to a collection called *Weeknight dinners*. Add it to Friday dinner, check a shopping item, and try the timer in Cook mode.
+3. **Submit a dish.** Use *Cumin potatoes* as a quick example. For two servings, list two cooked potatoes, one teaspoon oil, half a teaspoon cumin seeds and salt. For the method, toast the cumin in oil, add cubed potatoes and salt, then stir until golden. Add a photo if available.
+4. **Moderate from another browser.** Open the same final-site URL in a separate browser profile. Sign in with the deployment's private admin account. Inspect the dish and photo, return it with a specific correction, then let the cook revise and resubmit. Approve the revised recipe.
+5. **Show what became public.** From a signed-out browser, open the published recipe link. For the course's Local Storage requirement, open `/?edition=classroom` and demonstrate the React signup and login flow. Open `/review-1/` to demonstrate the framework-free version.
 
 ## Questions a reviewer may ask
 
-**Where is Mourya's account?** On the deployed site, open browser Developer Tools, then **Application → Local Storage → the site origin**. Account keys begin with `supperclub.v1/accounts/`. Each record contains the name, email, role, salt, password hash, and derivation settings. Successful login creates a separate session entry with an expiry. Signing out preserves the account and cookbook.
+**Where are Mourya's sign-in details?** In the configured hosted final, signup saves the account and a salted scrypt password hash in the project's Redis database. An administrator can see the cook's account details in the users directory. Successful sign-in sets an HTTP-only session cookie valid for up to eight hours. In Review 1, inspect Developer Tools, then **Application → Local Storage** for the site. Account keys begin with `supperclub.v1/accounts/` and hold the name, email, role, salt and password hash. Signing out ends the active session.
 
-**Can another laptop log into the same account or see the same review queue?** Each browser profile and site origin maintains its own data. Use two accounts in the same profile and origin for the moderation demonstration. Independent devices would require a shared service for authentication, storage, and authorization.
+**Why does a recipe submitted on one laptop appear on a second?** The hosted clients use the same API and database. A cook sees personal submissions, the administrator sees the review queue, and guests see approved recipes. Sign into the same deployment on each device. Vite on a laptop uses a separate local test database. Each Review 1 browser keeps its own records.
 
-**How is a recipe shared across devices?** A built-in recipe uses its stable catalogue ID. A link to a submitted recipe carries a readable copy of its recipe details in the URL fragment. Someone with that link can copy or forward it. Older copies can continue to exist after the author changes the original. Offline file sharing copies the recipe text.
+**What travels with my account?** Shared recipes, my submissions and their photos, my saved collections and my ratings use the hosted database. A meal plan, checked groceries, motion preferences and Cook mode progress stay with the browser where they were created.
 
-**What does the admin check protect?** The UI and shared store enforce the role during normal use. A person who controls the browser can inspect or change its stored data. The published demo admin credential is intended for classroom evaluation. A public multi-user service would require server-side role checks and private administrative credentials.
+**What happens to dishes entered before the shared service existed?** In the submission queue, the administrator can choose **Import from this browser** on the original browser profile and site origin. The imported dish is credited to the importing administrator and enters the shared review queue as pending. A different laptop cannot read those old browser records.
 
-**How do ratings and shopping quantities work?** Each local account has one current rating per recipe. Changing it replaces the previous vote. The planner adds matching ingredient descriptions with compatible units and retains other lines separately. Dietary tags support browsing and depend on the ingredients and products the cook actually uses.
+**Can a browser-local admin password control online moderation?** Online moderation requires a server-validated administrator session from the private deployment account. The published classroom credential signs into Review 1, the hosted React classroom edition and the standalone file. The server checks permissions again when a request would change shared data.
+
+**What does deleting a cook do?** In the hosted final, the administrator can delete a regular account. The deletion ends its sessions and removes its submissions, photos, ratings and collections. Published dishes authored by that account also disappear from other cooks' saved lists. Use a disposable account to demonstrate this action.
+
+**How is a recipe withdrawn?** An administrator can return it from the approved catalogue. Check the production menu and open its ordinary published link in a fresh browser. Text, screenshots and any earlier browser-only links containing a copied recipe may still exist independently.
+
+**What is the recipe coverage?** There are 46 built-in dishes across nine cuisines. Thirteen carry the Non-vegetarian tag. The catalogue includes chicken, beef, shrimp and fish across Indian, Italian, Mexican, Chinese, Japanese and Korean cuisines. Vegetarian, vegan and other filters work alongside cuisine and ingredient search.

@@ -1,11 +1,23 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import './account.css';
+import PhotoInput from './PhotoInput.jsx';
+import AdminWorkspace from './AdminWorkspace.jsx';
 
 const kitchen = () => window.KitchenStore;
 const approvedRecipes = () => kitchen().recipes().filter(recipe => recipe.status === 'approved');
-const photo = recipe => window.SupperclubPhotos?.[recipe.image] || './images/' + encodeURIComponent(recipe.image);
+const photo = recipe => window.KitchenPhoto.source(recipe);
 const countLabel = (count, noun) => count + ' ' + noun + (count === 1 ? '' : 's');
 const statusNames = { pending: 'In review', approved: 'Published', rejected: 'Declined' };
+
+function hasEarlierAccount() {
+  if (!['ready','refreshing'].includes(kitchen().service?.().phase)) return false;
+  try {
+    for (let index = 0; index < localStorage.length; index++) {
+      if (localStorage.key(index)?.startsWith('supperclub.v1/accounts/')) return true;
+    }
+  } catch { /* Storage access is optional. */ }
+  return false;
+}
 
 function PageHeading({ title, children, action }) {
   return <div className="ac-heading">
@@ -29,12 +41,14 @@ function Gate({ admin = false, user, go }) {
 export function AuthPage({ mode, go, completeLogin }) {
   const signup = mode === 'signup';
   const [receipt] = useState(() => signup ? null : kitchen().recentSignup());
+  const [showAccountNotice] = useState(hasEarlierAccount);
   const [name,setName] = useState('');
   const [email,setEmail] = useState(receipt?.email || '');
   const [password,setPassword] = useState('');
   const [confirmation,setConfirmation] = useState('');
   const [visible,setVisible] = useState(false);
   const [busy,setBusy] = useState(false);
+  const authPending = useRef(false);
   const [error,setError] = useState('');
   const feature = approvedRecipes().find(recipe => recipe.id === 'tomato-pasta') || approvedRecipes()[0];
   function switchMode() {
@@ -46,7 +60,8 @@ export function AuthPage({ mode, go, completeLogin }) {
   }
   async function authenticate(event) {
     event.preventDefault();
-    if (busy) return;
+    if (authPending.current) return;
+    authPending.current = true;
     setBusy(true);
     setError('');
     try {
@@ -59,10 +74,11 @@ export function AuthPage({ mode, go, completeLogin }) {
         return;
       }
       const user = await kitchen().login(email.trim(), password);
-      completeLogin(user);
+      await completeLogin(user);
     } catch (failure) {
       setError(failure.message);
     } finally {
+      authPending.current = false;
       setBusy(false);
     }
   }
@@ -73,6 +89,7 @@ export function AuthPage({ mode, go, completeLogin }) {
         {receipt
           ? <p className="ac-auth-success" role="status"><strong>Congratulations, {receipt.name}!</strong> Your account is ready. Sign in with the email and password you just registered.</p>
           : <p className="ac-intro">{signup ? 'Create an account to build your cookbook and share what you cook.' : 'Sign in to open your cookbook and pick up where you left off.'}</p>}
+        {showAccountNotice && !receipt && <p className="ad-account-notice">Used the older app on this laptop? Register a shared account once to sign in on other devices.</p>}
         <form className="ac-form" onSubmit={authenticate}>
           {signup && <label>Your name<input autoComplete="name" required maxLength={80} value={name} onChange={e => setName(e.target.value)} /></label>}
           <label>Email address<input name="email" type="email" autoComplete="username" maxLength={254} required value={email} onChange={e => setEmail(e.target.value)} /></label>
@@ -84,15 +101,15 @@ export function AuthPage({ mode, go, completeLogin }) {
           <ErrorMessage message={error}/>
           <button className="ac-button" disabled={busy}>{busy ? 'Please wait…' : signup ? 'Create account' : 'Sign in'}</button>
         </form>
-        <p className="ac-switch">{signup ? 'Already have an account? ' : 'New to Supperclub? '}<button className="ac-link" onClick={switchMode}>{signup ? 'Sign in' : 'Create an account'}</button></p>
+        <p className="ac-switch">{signup ? 'Already have an account? ' : 'New to Supperclub? '}<button className="ac-link" onClick={switchMode} disabled={busy}>{signup ? 'Sign in' : 'Create an account'}</button></p>
       </div>
-      {feature?.image && <figure className="ac-auth-photo"><img src={photo(feature)} alt={feature.title}/><figcaption>{feature.title}</figcaption></figure>}
+      {photo(feature) && <figure className="ac-auth-photo"><img src={photo(feature)} alt={feature.title}/><figcaption>{feature.title}</figcaption></figure>}
     </div>
   </section>;
 }
 
 function Thumbnail({recipe}) {
-  return recipe.image
+  return photo(recipe)
     ? <img className="ac-thumb" src={photo(recipe)} alt="" loading="lazy"/>
     : <span className="ac-thumb ac-thumb-text" aria-hidden="true">{recipe.title.slice(0,1)}</span>;
 }
@@ -104,6 +121,7 @@ export function CollectionsPage({user, go, notify, refresh, openRecipe}) {
   const [editing,setEditing] = useState(false);
   const [search,setSearch] = useState('');
   const [error,setError] = useState('');
+  const [pending,setPending] = useState(false);
   if (!user) return <Gate go={go}/>;
   const collections = kitchen().collections();
   const active = collections.find(c => c.id === selected) || collections[0];
@@ -111,10 +129,12 @@ export function CollectionsPage({user, go, notify, refresh, openRecipe}) {
   const included = allRecipes.filter(recipe => active?.recipeIds.includes(recipe.id));
   const listed = editing ? allRecipes.filter(r => r.title.toLowerCase().includes(search.toLowerCase().trim())) : included;
 
-  function create(event) {
+  async function create(event) {
     event.preventDefault();
+    if (pending) return;
+    setPending(true);
     try {
-      const saved = kitchen().createCollection(name.trim());
+      const saved = await kitchen().createCollection(name.trim());
       setName('');
       setNewCollection(false);
       setSelected(saved.id);
@@ -123,16 +143,18 @@ export function CollectionsPage({user, go, notify, refresh, openRecipe}) {
       setError('');
       refresh();
       notify('Collection created.');
-    } catch (failure) { setError(failure.message); }
+    } catch (failure) { setError(failure.message); } finally { setPending(false); }
   }
-  function toggle(recipe) {
+  async function toggle(recipe) {
+    if (pending || !active) return;
+    setPending(true);
     try {
       const isIncluded = active.recipeIds.includes(recipe.id);
-      kitchen().setCollection(active.id,recipe.id,!isIncluded);
+      await kitchen().setCollection(active.id,recipe.id,!isIncluded);
       refresh();
       setError('');
       notify(isIncluded ? 'Recipe removed from this collection.' : 'Recipe added to this collection.');
-    } catch (failure) { setError(failure.message); }
+    } catch (failure) { setError(failure.message); } finally { setPending(false); }
   }
   function selectCollection(id) {
     setSelected(id);
@@ -144,7 +166,7 @@ export function CollectionsPage({user, go, notify, refresh, openRecipe}) {
     <PageHeading title="My collections" action={<button className="ac-button" onClick={() => {setNewCollection(!newCollection);setError('');}}>{newCollection ? 'Cancel' : 'New collection'}</button>}>
       Keep your go-to dishes together for the next time you cook.
     </PageHeading>
-    {newCollection && <form onSubmit={create} className="ac-inline-form"><label>Collection name<input autoFocus required maxLength={60} placeholder="e.g. Sunday lunches" value={name} onChange={e => setName(e.target.value)}/></label><button className="ac-button">Create collection</button></form>}
+    {newCollection && <form onSubmit={create} className="ac-inline-form"><label>Collection name<input autoFocus required maxLength={60} placeholder="e.g. Sunday lunches" value={name} onChange={e => setName(e.target.value)}/></label><button className="ac-button" disabled={pending}>Create collection</button></form>}
     <ErrorMessage message={error}/>
     <div className="ac-cookbook">
       <nav className="ac-collection-nav" aria-label="Recipe collections">
@@ -162,7 +184,7 @@ export function CollectionsPage({user, go, notify, refresh, openRecipe}) {
               <button className="ac-row-open" onClick={() => openRecipe(recipe.id)}>
                 <Thumbnail recipe={recipe}/><span><strong>{recipe.title}</strong><small>{recipe.cuisine} · {recipe.time} min</small></span>
               </button>
-              <button className={'ac-chip-action ' + (inList ? '' : 'ac-add')} aria-label={(inList ? 'Remove ' : 'Add ') + recipe.title} onClick={() => toggle(recipe)}>{inList ? 'Remove' : 'Add'}</button>
+              <button disabled={pending} className={'ac-chip-action ' + (inList ? '' : 'ac-add')} aria-label={(inList ? 'Remove ' : 'Add ') + recipe.title} onClick={() => toggle(recipe)}>{inList ? 'Remove' : 'Add'}</button>
             </li>;
           })}
         </ul>
@@ -176,57 +198,86 @@ export function CollectionsPage({user, go, notify, refresh, openRecipe}) {
 
 const lines = text => text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
 const diets = ['Vegetarian','Vegan','Non-vegetarian','Contains egg','Gluten-free','Dairy-free'];
+// Keep recent drafts in this tab's memory while the cook navigates or reconnects.
+const submissionDrafts = new Map();
 export function SubmitPage({user, go, notify, refresh, editId = ''}) {
   const [original] = useState(() => editId ? kitchen().recipes().find(r => r.id === editId && r.authorId === user?.id && r.status === 'rejected') : null);
-  const [diet,setDiet] = useState(original?.diet || []);
+  const draftKey = JSON.stringify([user?.id,editId,original?.revision || 0]);
+  const [restored] = useState(() => submissionDrafts.get(draftKey));
+  const [diet,setDiet] = useState(restored?.diet ?? original?.diet ?? []);
+  const [photoChange,setPhotoChange] = useState(restored?.photo);
+  const [photoBusy,setPhotoBusy] = useState(false);
+  const [sending,setSending] = useState(false);
+  const inFlight = useRef(false);
   const [error,setError] = useState('');
+  function remember(changes) {
+    const draft = {...submissionDrafts.get(draftKey), ...changes};
+    submissionDrafts.delete(draftKey);
+    submissionDrafts.set(draftKey,draft);
+    if (submissionDrafts.size > 4) submissionDrafts.delete(submissionDrafts.keys().next().value);
+  }
+  function changeDiet(item,checked) {
+    const next = checked ? [...diet,item] : diet.filter(label => label !== item);
+    setDiet(next); remember({diet:next});
+  }
   if (!user) return <Gate go={go}/>;
   if (editId && !original) return <section className="ac-page ac-empty"><h1>Revision unavailable</h1><button className="ac-button" onClick={() => go('submissions')}>My submissions</button></section>;
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault();
+    if (photoBusy || inFlight.current) return;
+    inFlight.current = true;
+    setSending(true);
+    setError('');
     const form = new FormData(event.currentTarget);
     try {
       const fields = {
         title: form.get('title').trim(), description: form.get('description').trim(), cuisine: form.get('cuisine').trim(),
         diet, time: Number(form.get('time')), servings: Number(form.get('servings')),
+        ...(photoChange === undefined ? {} : {photo:photoChange}),
         ingredients: lines(form.get('ingredients')), steps: lines(form.get('steps'))
       };
-      if (original) kitchen().resubmitRecipe(original.id, fields, original.revision || 0);
-      else kitchen().submitRecipe(fields);
+      if (original) await kitchen().resubmitRecipe(original.id, fields, original.revision || 0);
+      else await kitchen().submitRecipe(fields);
+      submissionDrafts.delete(draftKey);
       refresh();
       notify(original ? 'Revision sent for review.' : 'Recipe submitted for review.');
       go('submissions');
     } catch (failure) { setError(failure.message); }
+    finally { inFlight.current = false; setSending(false); }
   }
   return <section className="ac-page ac-writing">
     <PageHeading title={original ? 'Revise your recipe' : 'Share a recipe'} action={<button className="ac-button ac-outline" onClick={() => go('submissions')}>My submissions</button>}>
       {original ? 'Update the recipe and send it back to the kitchen for review.' : 'Write down how you make it. An admin will review your recipe before it appears in Discover.'}
     </PageHeading>
-    <form className="ac-form ac-recipe-form" onSubmit={submit}>
+    <form className="ac-form ac-recipe-form" onSubmit={submit}
+      onChange={event => {if (event.target.name) remember({[event.target.name]:event.target.value});}}>
+      {restored && <p role="status">Your draft was restored for this tab.</p>}
       {original?.reviewNote && <p className="ac-review-note"><strong>Reviewer feedback</strong>{original.reviewNote}</p>}
       <fieldset><legend>Recipe details</legend>
-        <label>Recipe name<input name="title" defaultValue={original?.title} required maxLength={100} placeholder="e.g. Sunday tomato rasam"/></label>
-        <label>Description <small>(optional)</small><textarea name="description" defaultValue={original?.description} maxLength={600} rows={2} placeholder="What makes this dish special?"/></label>
+        <PhotoInput value={photoChange ?? photo(original)} onChange={value => {setPhotoChange(value);remember({photo:value});}} onBusyChange={setPhotoBusy} disabled={sending}/>
+        <label>Recipe name<input name="title" defaultValue={restored?.title ?? original?.title} required maxLength={100} placeholder="e.g. Sunday tomato rasam"/></label>
+        <label>Description <small>(optional)</small><textarea name="description" defaultValue={restored?.description ?? original?.description} maxLength={600} rows={2} placeholder="What makes this dish special?"/></label>
         <div className="ac-field-grid">
-          <label>Cuisine<input name="cuisine" defaultValue={original?.cuisine} required maxLength={60} placeholder="e.g. South Indian" list="ac-cuisines"/></label>
+          <label>Cuisine<input name="cuisine" defaultValue={restored?.cuisine ?? original?.cuisine} required maxLength={60} placeholder="e.g. South Indian" list="ac-cuisines"/></label>
           <datalist id="ac-cuisines">{[...new Set(approvedRecipes().map(r => r.cuisine))].map(cuisine => <option key={cuisine} value={cuisine}/>)}</datalist>
-          <label>Total time (minutes)<input name="time" defaultValue={original?.time} required type="number" min="1" max="1440" placeholder="35"/></label>
-          <label>Servings<input name="servings" defaultValue={original?.servings} required type="number" min="1" max="50" placeholder="4"/></label>
+          <label>Total time (minutes)<input name="time" defaultValue={restored?.time ?? original?.time} required type="number" min="1" max="1440" placeholder="35"/></label>
+          <label>Servings<input name="servings" defaultValue={restored?.servings ?? original?.servings} required type="number" min="1" max="50" placeholder="4"/></label>
         </div>
-        <div className="ac-diets"><p>Dietary preferences <small>(optional)</small></p><div>{[...new Set([...diets, ...(original?.diet || [])])].map(item => <label key={item}><input type="checkbox" checked={diet.includes(item)} onChange={e => setDiet(e.target.checked ? [...diet,item] : diet.filter(d => d !== item))}/>{item}</label>)}</div></div>
+        <div className="ac-diets"><p>Dietary preferences <small>(optional)</small></p><div>{[...new Set([...diets, ...(original?.diet || [])])].map(item => <label key={item}><input type="checkbox" checked={diet.includes(item)} onChange={e => changeDiet(item,e.target.checked)}/>{item}</label>)}</div></div>
       </fieldset>
       <fieldset><legend>Ingredients & method</legend>
-        <label>Ingredients<small>List one ingredient per line, including its quantity.</small><textarea name="ingredients" defaultValue={original?.ingredients.join('\n')} required rows={5} placeholder={'2 tbsp olive oil\n1 small onion, finely chopped'}/></label>
-        <label>Preparation steps<small>Write one step per line, in cooking order.</small><textarea name="steps" defaultValue={original?.steps.join('\n')} required rows={6} placeholder="Heat the oil in a pan over medium heat."/></label>
+        <label>Ingredients<small>List one ingredient per line, including its quantity.</small><textarea name="ingredients" defaultValue={restored?.ingredients ?? original?.ingredients.join('\n')} required maxLength={10050} rows={5} placeholder={'2 tbsp olive oil\n1 small onion, finely chopped'}/></label>
+        <label>Preparation steps<small>Write one step per line, in cooking order.</small><textarea name="steps" defaultValue={restored?.steps ?? original?.steps.join('\n')} required maxLength={18030} rows={6} placeholder="Heat the oil in a pan over medium heat."/></label>
       </fieldset>
       <ErrorMessage message={error}/>
-      <div className="ac-form-footer"><button className="ac-button">{original ? 'Resubmit for review' : 'Submit for review'}</button></div>
+      <div className="ac-form-footer"><button className="ac-button" disabled={photoBusy || sending}>{sending ? 'Submitting…' : original ? 'Resubmit for review' : 'Submit for review'}</button></div>
     </form>
   </section>;
 }
 
 function RecipePreview({recipe}) {
   return <div className="ac-recipe-preview">
+    {photo(recipe) && <img className="rp-review-photo" src={photo(recipe)} alt={recipe.title} loading="lazy"/>}
     {recipe.description && <p>{recipe.description}</p>}
     <p className="ac-meta">{recipe.cuisine} · {recipe.time} min · {countLabel(recipe.servings,'serving')}{recipe.diet?.length ? ' · ' + recipe.diet.join(', ') : ''}</p>
     <div className="ac-method"><div><h4>Ingredients</h4><ul>{recipe.ingredients.map((value,index) => <li key={index}>{value}</li>)}</ul></div>
@@ -252,35 +303,7 @@ export function SubmissionsPage({user,go,openRecipe}) {
   </section>;
 }
 
-export function AdminPage({user,go,notify,refresh,openRecipe}) {
-  const [tab,setTab] = useState('pending');
-  const [error,setError] = useState('');
-  if (user?.role !== 'admin') return <Gate admin user={user} go={go}/>;
-  const submissions = kitchen().recipes().filter(r => r.authorId && r.authorId !== 'editorial' && !window.KitchenSeeds?.some(seed => seed.id === r.id));
-  const statuses = ['pending','approved','rejected'];
-  const rows = submissions.filter(r => r.status === tab).reverse();
-  function review(recipe,status,note='') {
-    try {
-      kitchen().moderate(recipe.id,status,note,recipe.revision || 0);
-      refresh(); setError('');
-      notify(status === 'approved' ? 'Recipe published to Discover.' : 'Recipe declined.');
-    } catch (failure) {setError(failure.message);}
-  }
-  return <section className="ac-page">
-    <PageHeading title="Recipe review" action={<span className="ac-role">Admin workspace</span>}>Read community submissions and decide which recipes join the cookbook.</PageHeading>
-    <div className="ac-tabs" aria-label="Filter by review status">{statuses.map(status => <button className={tab === status ? 'selected' : ''} key={status} aria-pressed={tab === status} onClick={() => {setTab(status);setError('');}}>{statusNames[status]} <span>{submissions.filter(r => r.status === status).length}</span></button>)}</div>
-    <ErrorMessage message={error}/>
-    {rows.length === 0 ? <div className="ac-empty"><h2>{tab === 'pending' ? 'The review queue is clear.' : 'No ' + statusNames[tab].toLowerCase() + ' recipes yet.'}</h2><p>{tab === 'pending' ? 'Recipes submitted by cooks on this browser will appear here.' : 'Recipes you have reviewed will appear here.'}</p></div>
-       : <div className="ac-review-list">{rows.map(r => <details className="ac-review" key={r.id}>
-         <summary><span><strong>{r.title}</strong><small>Submitted by {r.author}</small></span><Status status={r.status}/></summary>
-         <RecipePreview recipe={r}/>
-         {r.reviewNote && <p className="ac-review-note"><strong>Reviewer feedback</strong>{r.reviewNote}</p>}
-         {tab !== 'approved' && <button className="ac-button" onClick={() => review(r,'approved')}>{tab === 'pending' ? 'Approve & publish' : 'Approve on reconsideration'}</button>}
-         {tab === 'approved' && <button className="ac-button ac-outline" onClick={() => openRecipe(r.id)}>Open published recipe</button>}
-         {tab !== 'rejected' && <form className="ac-form ac-feedback-form" onSubmit={e => {e.preventDefault(); review(r,'rejected',new FormData(e.currentTarget).get('note'));}}>
-           <label>Feedback for the cook<textarea name="note" rows={2} maxLength={400} required placeholder="What should the cook change?"/></label>
-           <button className="ac-button ac-outline">{tab === 'approved' ? 'Unpublish and request changes' : 'Decline recipe'}</button>
-         </form>}
-       </details>)}</div>}
-  </section>;
+export function AdminPage(props) {
+  if (props.user?.role !== 'admin') return <Gate admin user={props.user} go={props.go}/>;
+  return <AdminWorkspace {...props} {...{RecipePreview,Status}}/>;
 }

@@ -255,7 +255,11 @@
   }
 
   function recipeFields(input) {
+    if (Object.hasOwn(input,'photo') && input.photo !== '' && !window.KitchenPhoto?.validPhoto(input.photo)) {
+      throw new Error('Choose a valid recipe photo or remove it before submitting.');
+    }
     return {
+      ...(Object.hasOwn(input,'photo') ? {photo:input.photo} : {}),
       title: text(input.title, 'a recipe title', 100),
       description: text(input.description, 'the description', 600, false),
       cuisine: text(input.cuisine, 'the cuisine', 60),
@@ -377,7 +381,9 @@
   function shareToken(recipeId) {
     const dish = approvedRecipe(recipeId);
     if (!read(key('recipes', recipeId))) return '';
-    const snapshot = { ...recipeFields(dish), id: dish.id, author: dish.author };
+    const {photo, ...fields} = recipeFields(dish);
+    // Local snapshots are portable text recipes. The hosted edition shares the photo by recipe ID.
+    const snapshot = { ...fields, id: dish.id, author: dish.author };
     const bytes = new TextEncoder().encode(JSON.stringify(snapshot));
     let binary = '';
     for (const byte of bytes) binary += String.fromCharCode(byte);

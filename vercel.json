@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/kitchen.js": {
+      "includeFiles": "public/shared/recipes.js"
+    }
+  }
+}

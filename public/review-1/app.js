@@ -53,9 +53,9 @@
       + (person ? '<button class="textbtn" data-action="logout">Log out</button>' : '<a class="button" href="#login">Log in</a>');
   }
   function art(recipe, cls) {
-    const image = /^[a-z0-9][a-z0-9._-]*$/i.test(recipe.image || '') ? recipe.image : '';
+    const image = window.KitchenPhoto.source(recipe,'../images/');
     return `<div class="${cls}">${image
-      ? `<img src="../images/${encodeURIComponent(image)}" alt="${html(recipe.title)}" ${cls === 'thumb' ? 'loading="lazy"' : ''}>`
+      ? `<img src="${html(image)}" alt="${html(recipe.title)}" ${cls === 'thumb' ? 'loading="lazy"' : ''}>`
       : '<div class="art" aria-hidden="true">sc</div>'}</div>`;
   }
   function eyebrow(text) { return `<p class="eyebrow">${html(text)}</p>`; }
@@ -158,12 +158,49 @@
     main.innerHTML = `<div class="formbox"><div class="intro">${eyebrow('Community kitchen')}<h1>Submit a recipe</h1><p>Share a dish you love. An admin reviews each recipe before it appears in Explore.</p></div>
       <form id="submit-recipe" class="formgrid panel"><label>Recipe name<input name="title" required maxlength="100"></label>
       <label>Description<textarea name="description" rows="2" maxlength="600"></textarea></label>
+      <label>Recipe photo (optional)<input type="file" id="dish-photo" accept="image/jpeg,image/png,image/webp"><span class="tip">JPEG, PNG or WebP, up to 10 MB.</span></label>
+      <div class="classic-photo"><img class="dish-preview" alt="Recipe photo preview" hidden><button class="under" type="button" data-remove-photo hidden>Remove photo</button><span class="tip" role="status" data-photo-status></span></div>
       <div class="double"><label>Cuisine<input name="cuisine" required maxlength="60" placeholder="e.g. Indian"></label>
       <label>Dietary preferences<input name="diet" placeholder="e.g. Vegetarian, Gluten-free"><span class="tip">Optional, separated by commas.</span></label></div>
       <div class="double"><label>Total time (minutes)<input type="number" name="time" min="1" max="1440" required></label><label>Servings<input type="number" name="servings" min="1" max="50" required></label></div>
       <label>Ingredients<textarea name="ingredients" required rows="5" placeholder="2 cups cooked rice"></textarea><span class="tip">Include quantities and use one line per ingredient.</span></label>
       <label>Method<textarea name="steps" required rows="6" placeholder="Rinse the rice until the water runs clear."></textarea><span class="tip">Use one line per step.</span></label>
-      <p class="form-error" role="alert"></p><button class="button">${original ? 'Resubmit for review' : 'Submit for review'}</button></form></div>`;
+      <p class="form-error" role="alert"></p><button class="button" type="submit">${original ? 'Resubmit for review' : 'Submit for review'}</button></form></div>`;
+    const recipeForm = document.getElementById('submit-recipe');
+    const picker = recipeForm.querySelector('#dish-photo');
+    const preview = recipeForm.querySelector('.dish-preview');
+    const remove = recipeForm.querySelector('[data-remove-photo]');
+    const status = recipeForm.querySelector('[data-photo-status]');
+    const submit = recipeForm.querySelector('button[type="submit"]');
+    let selection = 0, preparing = false;
+    function showPhoto(url) {
+      if (url) preview.src = url;
+      else preview.removeAttribute('src');
+      preview.hidden = !url; remove.hidden = !url;
+    }
+    showPhoto(window.KitchenPhoto.source(original,'../images/'));
+    picker.addEventListener('change', async () => {
+      const file = picker.files?.[0]; picker.value = '';
+      if (!file) return;
+      const version = ++selection;
+      preparing = true;
+      submit.disabled = true; remove.hidden = false; remove.textContent = 'Cancel photo selection';
+      status.textContent = 'Preparing your photo…';
+      try {
+        const url = await window.KitchenPhoto.read(file);
+        if (version === selection) { recipeForm.recipePhoto = url; showPhoto(url); status.textContent = ''; }
+      } catch(error) {
+        if (version === selection) { status.textContent = error.message; remove.hidden = preview.hidden; }
+      } finally {
+        if (version === selection) { preparing = false; submit.disabled = false; remove.textContent = 'Remove photo'; }
+      }
+    });
+    remove.addEventListener('click', () => {
+      selection++;
+      if (!preparing) recipeForm.recipePhoto = '';
+      showPhoto(recipeForm.recipePhoto ?? window.KitchenPhoto.source(original,'../images/'));
+      preparing = false; status.textContent = ''; submit.disabled = false; remove.textContent = 'Remove photo';
+    });
     if (original) {
       const form = document.getElementById('submit-recipe');
       main.querySelector('h1').textContent = 'Revise your recipe';
@@ -277,9 +314,12 @@
     const data = Object.fromEntries(new FormData(form));
     const errorBox = form.querySelector('.form-error');
     errorBox.textContent = '';
-    const submit = form.querySelector('button[type="submit"], button:last-of-type');
-    if (submit.disabled) return;
+    const submit = form.querySelector('button[type="submit"]') || form.querySelector('button:last-of-type');
+    if (submit.disabled || form.dataset.inFlight) return;
+    form.dataset.inFlight = 'true';
     submit.disabled = true;
+    const photoControls = form.querySelectorAll('#dish-photo,[data-remove-photo]');
+    photoControls.forEach(control => { control.disabled = true; });
     try {
       if (form.id === 'signup') {
         if (data.password !== data.confirmation) throw new Error('Your passwords do not match. Enter the same password in both fields.');
@@ -301,18 +341,23 @@
         const collection = store.createCollection(data.name);
         go('collections/' + encodeURIComponent(collection.id)); say('Collection created.');
       } else if (form.id === 'submit-recipe') {
+        if (form.recipePhoto !== undefined) data.photo = form.recipePhoto;
         data.diet = data.diet.split(',').map(d => d.trim()).filter(Boolean);
         for (const key of ['ingredients','steps']) data[key] = data[key].split(/\r?\n/).map(line => line.trim()).filter(Boolean);
         data.time = Number(data.time); data.servings = Number(data.servings);
-        if (form.dataset.editId) store.resubmitRecipe(form.dataset.editId, data, Number(form.dataset.revision));
-        else store.submitRecipe(data);
+        if (form.dataset.editId) await store.resubmitRecipe(form.dataset.editId, data, Number(form.dataset.revision));
+        else await store.submitRecipe(data);
         go('collections'); say('Recipe submitted for admin review.');
       } else if (form.matches('.review-feedback')) {
         store.moderate(form.dataset.recipe,'rejected',data.note,Number(form.dataset.revision));
         render(); say('Recipe returned to its author with feedback.');
       }
     } catch (error) { errorBox.textContent = error.message; }
-    finally { submit.disabled = false; }
+    finally {
+      delete form.dataset.inFlight;
+      submit.disabled = false;
+      photoControls.forEach(control => { control.disabled = false; });
+    }
   });
   window.addEventListener('hashchange', () => { render(); window.scrollTo(0,0); main.focus({preventScroll:true}); });
   window.addEventListener('storage', () => render());

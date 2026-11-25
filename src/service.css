@@ -1,0 +1,17 @@
+.kitchen-service-note {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:center;
+  gap:.75rem;
+  padding:.55rem 1rem;
+  background:#f1ecd9;
+  color:#51462d;
+  text-align:center;
+  font-size:.875rem;
+}
+.kitchen-service-note :is(button,a) {text-decoration:underline;text-underline-offset:.18em;font-weight:650;}
+.service-gate {display:grid;align-content:center;justify-items:start;min-height:48vh;padding-block:3rem;}
+.service-gate h1 {font-family:var(--serif);font-weight:500;line-height:1.15;margin:1rem 0 .25rem;}
+.service-gate p {max-width:54ch;color:var(--muted);}
+.service-gate div {display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.5rem;}
