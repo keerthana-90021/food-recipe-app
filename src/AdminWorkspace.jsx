@@ -151,7 +151,6 @@ export default function AdminWorkspace({user, openRecipe, notify, refresh, Recip
   const [action, setAction] = useState(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
-  const [importedTitle, setImportedTitle] = useState('');
   const latch = useRef(false);
   const service = store.service?.() || {phase:'offline'};
   const waiting = service.phase === 'loading' || service.phase === 'unavailable' || (service.phase === 'refreshing' && !service.lastSuccessAt);
@@ -159,9 +158,8 @@ export default function AdminWorkspace({user, openRecipe, notify, refresh, Recip
   const recipes = waiting ? [] : store.recipes();
   const members = waiting ? [] : store.users();
   const submissions = recipes.filter(recipe => !isSeed(recipe));
-  const candidates = online && tab === 'queue' ? store.legacyCandidates() : [];
   const busy = pending || service.phase === 'loading';
-  const selectAction = value => {setAction(value); setError(''); setImportedTitle('');};
+  const selectAction = value => {setAction(value); setError('');};
   const close = () => selectAction(null);
   async function run(task, message, finish) {
     if (latch.current) return;
@@ -190,7 +188,7 @@ export default function AdminWorkspace({user, openRecipe, notify, refresh, Recip
   const queue = tab === 'queue';
   const emptyTitle = query || (tab === 'catalog' && source) ? 'No matches found.' : queue && status === 'pending' ? 'The review queue is clear.'
     : queue ? 'No ' + labels[status].toLowerCase() + ' community recipes yet.' : tab === 'users' ? 'No users to display.' : 'The catalog is empty.';
-  const dialogTitles = {edit:'Edit recipe',deleteRecipe:'Delete recipe',deleteUser:'Delete user',import:'Import from this browser'};
+  const dialogTitles = {edit:'Edit recipe',deleteRecipe:'Delete recipe',deleteUser:'Delete user'};
   const recipeAction = action?.type === 'edit' || action?.type === 'deleteRecipe';
   const currentRecipe = recipeAction ? recipes.find(recipe => recipe.id === action.entry.id) : null;
   const stale = recipeAction && !waiting && (!currentRecipe || (action.entry.revision || 0) !== (currentRecipe.revision || 0));
@@ -218,7 +216,6 @@ export default function AdminWorkspace({user, openRecipe, notify, refresh, Recip
           <div className="ac-tabs" aria-label="Filter by review status">{Object.entries(labels).map(([key,name]) => <button key={key}
             aria-pressed={status === key} className={status === key ? 'selected' : ''} onClick={() => {setStatus(key); setLimit(16); setError('');}}>
             {name} <span>{submissions.filter(recipe => recipe.status === key).length}</span></button>)}</div>
-          {online && <button className="ad-import-link" onClick={() => selectAction({type:'import'})}>Import from this browser{candidates.length ? ' ('+candidates.length+')' : ''}</button>}
         </div>}
         {tab === 'catalog' && <div className="ad-filters"><label className="ad-filter-select">Recipe source<select value={source} onChange={event => {setSource(event.target.value); setLimit(16);}}>
           <option value="">All sources</option><option value="editorial">Editorial</option><option value="community">Community</option></select></label></div>}
@@ -237,20 +234,11 @@ export default function AdminWorkspace({user, openRecipe, notify, refresh, Recip
     </>}
     {action && <WorkspaceDialog title={dialogTitles[action.type]} busy={pending} close={close}>
       {error && <p className="ac-error" role="alert">{error}</p>}
-      {stale ? <div className="ad-import"><p role="alert">{currentRecipe ? 'Another editor changed this recipe. Load the latest version before making changes.' : 'This recipe was removed from the catalog.'}</p>
+      {stale ? <div><p role="alert">{currentRecipe ? 'Another editor changed this recipe. Load the latest version before making changes.' : 'This recipe was removed from the catalog.'}</p>
         {currentRecipe && <button className="ac-button ac-outline" onClick={() => selectAction({...action,entry:currentRecipe})}>Load latest version</button>}</div> : <>
         {action.type === 'edit' && <EditRecipe recipe={action.entry} run={run} busy={pending} close={close}/>}
         {['deleteUser','deleteRecipe'].includes(action.type) && <ConfirmDelete target={action} run={run} close={close} busy={pending}/>}
       </>}
-      {action.type === 'import' && <div className="ad-import">
-        <p>Choose a recipe saved in the older app on this browser. Its recipe details will enter the shared queue for review. The shared submission will be credited to your account, {user.name}.</p>
-        {importedTitle && <p className="ad-imported" role="status"><Icon name="check" size={16}/>{importedTitle} was added to the review queue.</p>}
-        {candidates.length ? <ul>{candidates.map(({sourceId,recipe,originalAuthor}) => <li key={sourceId}><div><strong>{recipe.title}</strong><small>{recipe.cuisine}{originalAuthor ? ' · Originally by ' + originalAuthor : ''}</small></div>
-          <button className="ac-button ac-outline" disabled={pending} aria-label={'Import ' + recipe.title} onClick={() => run(() => store.importRecipe(sourceId), 'Recipe imported for review.',
-            () => {setImportedTitle(recipe.title); setStatus('pending'); setQuery(''); setLimit(16);})}>Import</button></li>)}</ul>
-          : <p className="ad-notice">{importedTitle ? 'All available recipes from this browser have been imported.' : 'No recipes are available to import here. Open this site in the original browser profile on the laptop where the recipe was submitted.'}</p>}
-        {importedTitle && <button className="ac-button ac-outline" onClick={close}>Back to review queue</button>}
-      </div>}
     </WorkspaceDialog>}
   </main>;
 }

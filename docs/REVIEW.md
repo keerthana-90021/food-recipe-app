@@ -33,7 +33,7 @@ A home cook needs a recipe that fits their ingredients, diet and available time.
 
 **What travels with my account?** Shared recipes, my submissions and their photos, my saved collections and my ratings use the hosted database. A meal plan, checked groceries, motion preferences and Cook mode progress stay with the browser where they were created.
 
-**What happens to dishes entered before the shared service existed?** In the submission queue, the administrator can choose **Import from this browser** on the original browser profile and site origin. The imported dish is credited to the importing administrator and enters the shared review queue as pending. A different laptop cannot read those old browser records.
+**What happens to dishes entered before the shared service existed?** These dishes stay in the original browser profile. A cook can submit a dish through **Submit a recipe** in the shared edition for admin review.
 
 **Can a browser-local admin password control online moderation?** Online moderation requires a server-validated administrator session from the private deployment account. The published classroom credential signs into Review 1, the hosted React classroom edition and the standalone file. The server checks permissions again when a request would change shared data.
 

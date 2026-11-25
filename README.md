@@ -50,6 +50,6 @@ For the React classroom edition, Review 1 and the packaged offline demo, the cla
 
 ## Previously submitted recipes
 
-A recipe entered in the earlier browser-only app lives on the original browser profile and site origin. On that same browser, sign in to the hosted final app as the private admin, open the submission queue and select **Import from this browser**. Choose a dish. The imported recipe is credited to the importing admin and enters the pending queue. Review it before publishing. Older browser passwords and demo admin privileges stay in the earlier edition. A returning cook can create an account in the hosted edition.
+Recipes saved in the browser-only edition stay in the original browser profile. To share one with the community, sign in to the hosted app and use **Submit a recipe**.
 
 For a short demonstration, sample submission and reviewer questions, see the [review guide](docs/REVIEW.md).
