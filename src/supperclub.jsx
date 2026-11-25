@@ -2,6 +2,7 @@ import React, {useEffect, useReducer, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import Discover from './Discover.jsx';
 import RecipeDetail from './RecipeDetail.jsx';
+import MealPlanner from './MealPlanner.jsx';
 import {AuthPage, CollectionsPage, SubmitPage, AdminPage, SubmissionsPage} from './AccountPages.jsx';
 import {Icon} from './Icons.jsx';
 import './supperclub.css';
@@ -10,7 +11,7 @@ const store=window.KitchenStore;
 const getRoute=()=>location.hash.slice(1).replace(/^\//,'') || 'discover';
 const safeDecode=value=>{try{return decodeURIComponent(value);}catch{return '';}};
 const defaultSearch={query:'',quick:'All recipes',cuisine:'',diet:'',sort:'featured',filtersOpen:false};
-const privatePages=['collections','submit','submissions','admin'];
+const privatePages=['collections','planner','submit','submissions','admin'];
 function Brand() {
   return <a href="#discover" className="brand" aria-label="Supperclub home"><span className="brand-mark"><Icon name="bowl" size={26}/></span><span>Supperclub<span className="brand-period">.</span></span></a>;
 }
@@ -26,7 +27,7 @@ function Header({user,go,route,onLogout}) {
     document.addEventListener('pointerdown',outside);document.addEventListener('keydown',escape);
     return ()=>{document.removeEventListener('pointerdown',outside);document.removeEventListener('keydown',escape);};
   },[open]);
-  const items=[['discover','Discover'],['collections','My cookbook'],['submit','Submit a recipe']];
+  const items=[['discover','Discover'],['collections','My cookbook'],['planner','Meal planner'],['submit','Submit a recipe']];
   const navLink=([key,label])=><a key={key} href={'#'+key} className={route===key?'current':''} aria-current={route===key?'page':undefined} onClick={e=>{if(!e.ctrlKey&&!e.metaKey&&!e.shiftKey){e.preventDefault();setOpen(false);go(key);}}}>{label}</a>;
   return <header className="site-header"><div className="header-inner page-width">
     <Brand/><nav className="desktop-nav" aria-label="Main navigation">{items.map(navLink)}</nav>
@@ -68,7 +69,8 @@ function App() {
     const onRoute=()=>{setRoute(getRoute());window.scrollTo(0,0);};
     const onStorage=()=>refresh();
     window.addEventListener('hashchange',onRoute);window.addEventListener('storage',onStorage);
-    return ()=>{window.removeEventListener('hashchange',onRoute);window.removeEventListener('storage',onStorage);clearTimeout(timer.current);};
+    window.addEventListener('supperclub:session-expired',onStorage);
+    return ()=>{window.removeEventListener('hashchange',onRoute);window.removeEventListener('storage',onStorage);window.removeEventListener('supperclub:session-expired',onStorage);clearTimeout(timer.current);};
   },[]);
   useEffect(()=>{
     if(denied){setReturnTo(route);location.replace('#login');}
@@ -89,6 +91,7 @@ function App() {
   }
   else if(['login','signup'].includes(page)){title=page==='login'?'Sign in':'Join Supperclub';content=<AuthPage key={page} {...props}/>;}
   else if(page==='collections'){title='My cookbook';content=<CollectionsPage {...props}/>;}
+  else if(page==='planner'){title='Meal planner';content=<MealPlanner key={user.id} {...props}/>;}
   else if(page==='submit'){title='Submit a recipe';content=<SubmitPage {...props}/>;}
   else if(page==='submissions'){title='My submissions';content=<SubmissionsPage {...props}/>;}
   else if(page==='admin'){title='Admin dashboard';content=<AdminPage {...props}/>;}

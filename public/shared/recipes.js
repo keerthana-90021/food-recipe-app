@@ -351,3 +351,397 @@ window.KitchenSeeds = [
     "baseCount": 0
   }
 ];
+
+// Keep recipe IDs stable: personal collections, ratings and shared links use them.
+window.KitchenSeeds.push(...[
+  {
+    id: 'chana-masala', title: 'Ginger & Tomato Chana Masala', cuisine: 'Indian',
+    description: 'Mash a spoonful of chickpeas into the spiced tomato base for a gravy that clings to every bite.',
+    diet: ['Vegan', 'Dairy-free', 'Gluten-free'], category: 'Dinner', time: 35, servings: 3,
+    image: 'chana-masala.webp',
+    ingredients: [
+      '2 tbsp neutral oil', '1 tsp cumin seeds', '1 large onion, finely chopped', '1 tbsp grated ginger',
+      '3 garlic cloves, crushed', '1 tsp ground coriander', '1/2 tsp Kashmiri chilli powder',
+      '1/4 tsp turmeric', '300 g chopped tomatoes', '1/2 tsp salt',
+      '480 g drained cooked chickpeas', '200 ml water', '1/2 tsp garam masala',
+      '1 tbsp lemon juice', '2 tbsp chopped coriander leaves'
+    ],
+    steps: [
+      'Warm the oil in a deep frying pan. When a cumin seed sizzles on contact, add the rest and stir for 20 seconds. Add the onion and cook over medium heat for 7–8 minutes, until golden at the edges.',
+      'Stir in the ginger and garlic for a minute. Add the ground coriander, chilli powder and turmeric, followed immediately by the tomatoes and salt. Cook, stirring, until the tomato breaks down and the spoon leaves a clear trail across the pan.',
+      'Add the chickpeas and water. Crush a few chickpeas against the side of the pan to thicken the gravy. Simmer uncovered for 12–15 minutes, stirring occasionally.',
+      'Stir in the garam masala, lemon juice and coriander leaves just before serving.'
+    ]
+  },
+  {
+    id: 'vegetable-pulao', title: 'One-Pot Vegetable Pulao', cuisine: 'Indian',
+    description: 'Fragrant basmati steams over whole spices, carrots and green beans. A ten-minute rest gives the grains time to separate.',
+    diet: ['Vegan', 'Dairy-free', 'Gluten-free'], category: 'Lunch', time: 45, servings: 3,
+    image: 'vegetable-pulao.webp',
+    ingredients: [
+      '200 g basmati rice', '1 tbsp neutral oil', '1 tsp cumin seeds', '1 small cinnamon stick',
+      '3 green cardamom pods, lightly crushed', '1 onion, thinly sliced', '2 tsp grated ginger',
+      '1 carrot, finely diced', '80 g green beans, chopped', '70 g green peas',
+      '320 ml water', '3/4 tsp salt', '2 tbsp fresh mint leaves'
+    ],
+    steps: [
+      'Rinse the rice until the water runs nearly clear. Cover with fresh water, soak for 10 minutes and drain. Meanwhile prepare the vegetables.',
+      'Heat the oil in a lidded saucepan. Stir in the cumin, cinnamon and cardamom for 30 seconds. Add the onion and cook over medium heat for 5–6 minutes, until it starts to brown.',
+      'Stir in the ginger, carrot, beans and peas. Cook for 2 minutes. Gently fold in the drained rice, measured water and salt and bring to a boil.',
+      'Cover tightly, reduce the heat to its lowest setting and cook for 12 minutes. Turn off the heat and leave covered for 10 minutes. Remove the cinnamon and cardamom, fluff with a fork and scatter mint over the top.'
+    ]
+  },
+  {
+    id: 'poriyal', title: 'Green Bean & Coconut Poriyal', cuisine: 'Indian',
+    description: 'Finely sliced beans cook in their own steam before a final toss with grated coconut and toasted lentils.',
+    diet: ['Vegan', 'Dairy-free', 'Gluten-free'], category: 'Side', time: 25, servings: 3, image: 'poriyal.webp',
+    ingredients: [
+      '300 g green beans, trimmed', '1 tbsp coconut oil', '1/2 tsp black mustard seeds', '1 tsp split urad dal',
+      '1 dried red chilli, broken in half', '8 curry leaves, patted dry', '1/2 tsp salt',
+      '3 tbsp water', '35 g fresh or thawed grated coconut'
+    ],
+    steps: [
+      'Slice the beans crosswise into 5 mm rounds so they cook evenly.',
+      'Heat the oil in a wide pan. Add the mustard seeds and wait for them to pop. Turn the heat down, add the urad dal and stir until pale gold. Add the dried chilli and curry leaves and stir briefly.',
+      'Add the beans, salt and water. Cover and cook for 5–7 minutes over medium-low heat, until the beans are tender with a little bite.',
+      'Uncover and stir until any water evaporates. Fold in the coconut for 1 minute, then serve.'
+    ]
+  },
+  {
+    id: 'andhra-tomato-pappu', title: 'Andhra Tomato Pappu', cuisine: 'Indian',
+    description: 'Soft toor dal and tomatoes meet a hot garlic and curry-leaf tempering in this Andhra everyday staple.',
+    diet: ['Vegan', 'Dairy-free', 'Gluten-free'], category: 'Dinner', time: 60, servings: 3, image: 'andhra-tomato-pappu.webp',
+    ingredients: [
+      '150 g split toor dal', '700 ml water, plus more as needed', '1/4 tsp turmeric',
+      '2 ripe tomatoes, diced', '1 green chilli, slit', '1/2 tsp salt', '1 tbsp neutral oil',
+      '1/2 tsp black mustard seeds', '1/2 tsp cumin seeds', '3 garlic cloves, sliced',
+      '1 dried red chilli, broken', '8 curry leaves, patted dry'
+    ],
+    steps: [
+      'Rinse the dal. Put it in a large saucepan with the water and turmeric. Bring to a boil, skim any foam and simmer with the lid ajar for 30–40 minutes. Add water if the dal begins to dry out.',
+      'When the lentils squash easily, add the tomatoes, green chilli and salt. Simmer for another 10 minutes. Mash lightly and loosen with a splash of water to make a ladleable dal.',
+      'Heat the oil in a small pan. Add the mustard seeds, then the cumin once the mustard starts popping. Add garlic and cook until its edges turn gold. Briefly stir in the dried chilli and curry leaves.',
+      'Pour the hot tempering over the dal and cover for a minute to retain its aroma. Stir and serve hot.'
+    ]
+  },
+  {
+    id: 'pesto-gnocchi', title: 'Basil Pesto Potato Gnocchi', cuisine: 'Italian',
+    description: 'Soft potato gnocchi and fresh basil pesto need only a splash of cooking water to come together.',
+    diet: ['Vegetarian'], category: 'Dinner', time: 20, servings: 2, image: 'pesto-gnocchi.webp',
+    ingredients: [
+      '350 g vegetarian potato gnocchi', '30 g fresh basil leaves', '20 g pine nuts',
+      '1 small garlic clove', '30 g grated vegetarian hard cheese', '3 tbsp extra virgin olive oil',
+      '1 tsp lemon juice', '1 tsp salt for cooking water'
+    ],
+    steps: [
+      'Bring a pot of water to a boil and add the salt. In a dry pan toast the pine nuts over low heat, tossing for 2–3 minutes, then let them cool.',
+      'Pulse the basil, pine nuts, garlic and cheese in a small processor, or pound them in a mortar. Stir in the olive oil and lemon juice.',
+      'Cook the gnocchi in the boiling water according to the packet. Reserve a mug of the cooking water before lifting the gnocchi out with a slotted spoon.',
+      'In a warm serving bowl loosen the pesto with 2 tbsp cooking water. Fold in the gnocchi off the heat, adding another splash if needed to coat them.'
+    ]
+  },
+  {
+    id: 'mushroom-risotto', title: 'Golden Mushroom Risotto', cuisine: 'Italian',
+    description: 'Brown mushrooms separately for crisp edges, then fold them into slow-stirred Arborio rice with a little butter.',
+    diet: ['Vegetarian'], category: 'Dinner', time: 40, servings: 2, image: 'mushroom-risotto.webp',
+    ingredients: [
+      '700 ml vegetable stock', '220 g chestnut mushrooms, sliced', '1 tbsp olive oil',
+      '25 g butter', '1 shallot, finely chopped', '1 garlic clove, minced', '160 g Arborio rice',
+      '30 g grated vegetarian hard cheese', '1 tbsp chopped parsley', '1/4 tsp black pepper'
+    ],
+    steps: [
+      'Heat the stock in a saucepan and keep it at a gentle simmer. In a wide pan heat the olive oil and fry the mushrooms over medium-high heat for 6–8 minutes, until browned. Set aside.',
+      'Turn the heat down. Melt half the butter in the same pan and soften the shallot for 3 minutes. Add the garlic and rice and stir for a minute, until the grain edges turn translucent.',
+      'Add the stock a ladle at a time, stirring frequently. Wait until the previous addition is mostly absorbed before adding the next. Start tasting after 18 minutes and stop when the rice is tender with a slight bite.',
+      'Fold in the mushrooms, remaining butter, cheese and pepper. Add a splash of stock or hot water so the risotto spreads gently when spooned onto a plate. Finish with parsley.'
+    ]
+  },
+  {
+    id: 'cannellini-rosemary-soup', title: 'Rosemary & Cannellini Bean Soup', cuisine: 'Italian',
+    description: 'A little mashed cannellini bean gives this rosemary-scented soup its creamy body.',
+    diet: ['Vegan', 'Dairy-free'], category: 'Lunch', time: 30, servings: 3, image: 'cannellini-rosemary-soup.webp',
+    ingredients: [
+      '2 tbsp olive oil', '1 onion, diced', '1 small carrot, diced', '1 celery stalk, diced',
+      '2 cloves garlic, sliced', '1 tsp finely chopped rosemary', '1 tbsp tomato paste',
+      '480 g drained cooked cannellini beans', '650 ml vegetable stock', '70 g chopped kale',
+      '1 tsp lemon juice', '1/4 tsp black pepper'
+    ],
+    steps: [
+      'Warm the oil in a saucepan. Cook the onion, carrot and celery over medium heat for 7–8 minutes, stirring occasionally.',
+      'Add the garlic and rosemary for 30 seconds. Stir in the tomato paste and cook for a minute. Add the beans and stock, bring to a boil and simmer for 10 minutes.',
+      'Mash a ladle of beans against the side of the pan. Add the kale and simmer for 4–5 minutes until tender.',
+      'Finish with lemon juice and pepper. Ladle the soup into warm bowls.'
+    ]
+  },
+  {
+    id: 'peperonata', title: 'Sweet Pepper Peperonata', cuisine: 'Italian',
+    description: 'Slow-cooked red and yellow peppers turn silky with tomatoes, basil and a small splash of vinegar.',
+    diet: ['Vegan', 'Dairy-free', 'Gluten-free'], category: 'Side', time: 40, servings: 3, image: 'peperonata.webp',
+    ingredients: [
+      '2 red peppers', '1 yellow pepper', '2 tbsp olive oil', '1 onion, thinly sliced',
+      '2 garlic cloves, sliced', '250 g ripe tomatoes, chopped', '1/2 tsp salt',
+      '2 tsp red wine vinegar', '8 fresh basil leaves'
+    ],
+    steps: [
+      'Remove the pepper stems and seeds and cut the flesh into strips about 1 cm wide.',
+      'Heat the olive oil in a wide lidded pan over medium heat. Soften the onion for 5 minutes. Add the garlic and peppers and stir for 3 minutes.',
+      'Mix in the tomatoes and salt. Cover and cook over low heat for 18–22 minutes, stirring a few times, until the peppers are tender.',
+      'Remove the lid and cook off any watery juices. Stir in the vinegar, tear in the basil and serve warm or at room temperature.'
+    ]
+  },
+  {
+    id: 'mushroom-tacos', title: 'Smoky Mushroom Tacos', cuisine: 'Mexican',
+    description: 'Sear the mushrooms in a single layer and let them brown before adding the spices. Lime and fresh onion finish the tacos.',
+    diet: ['Vegan', 'Dairy-free'], category: 'Dinner', time: 25, servings: 2, image: 'mushroom-tacos.webp',
+    ingredients: [
+      '300 g oyster or chestnut mushrooms, torn or sliced', '1 tbsp neutral oil',
+      '1 tsp smoked paprika', '1/2 tsp ground cumin', '1/2 tsp dried oregano', '1/2 tsp salt',
+      '6 small corn tortillas', '1/4 white onion, finely diced', '1 small avocado, sliced',
+      '2 tbsp chopped coriander leaves', '1 lime, cut into wedges'
+    ],
+    steps: [
+      'Pat the mushrooms dry. Heat a large heavy pan over medium-high heat with the oil and spread the mushrooms in one layer. Work in batches if needed.',
+      'Leave the mushrooms undisturbed for 3 minutes, then toss and cook for 4–5 minutes until their moisture has evaporated. Add paprika, cumin, oregano and salt, and toss for a final minute.',
+      'Warm each tortilla for about 20 seconds per side in a dry pan. Wrap the warmed tortillas in a clean tea towel as you go.',
+      'Divide the mushrooms and avocado between the tortillas. Scatter over the onion and coriander and serve with lime wedges.'
+    ]
+  },
+  {
+    id: 'black-bean-quesadillas', title: 'Black Bean & Cheese Quesadillas', cuisine: 'Mexican',
+    description: 'A coarse black bean mash holds the filling in place while the cheese melts and the tortillas crisp.',
+    diet: ['Vegetarian'], category: 'Lunch', time: 20, servings: 2, image: 'black-bean-quesadillas.webp',
+    ingredients: [
+      '240 g drained cooked black beans', '1/2 tsp ground cumin', '1/4 tsp salt', '1 tbsp lime juice',
+      '2 tbsp water', '4 medium flour tortillas', '100 g grated vegetarian melting cheese',
+      '1 spring onion, thinly sliced', '2 tsp neutral oil'
+    ],
+    steps: [
+      'Warm the beans, cumin, salt and water in a small pan for 3 minutes. Mash roughly with a fork and stir in the lime juice.',
+      'Spread the mash over one half of each tortilla. Top with cheese and spring onion, then fold the empty half over and press gently.',
+      'Heat half the oil in a wide pan over medium heat. Cook two folded tortillas for 2–3 minutes per side, until the crust is golden and the cheese melts. Repeat with the remaining oil and tortillas.',
+      'Let them stand briefly, then cut into wedges while warm.'
+    ]
+  },
+  {
+    id: 'salsa-roja', title: 'Charred Tomato Salsa Roja', cuisine: 'Mexican',
+    description: 'Charred tomato skins and a toasted jalapeño give this spoonable salsa its smoky depth.',
+    diet: ['Vegan', 'Dairy-free', 'Gluten-free'], category: 'Side', time: 25, servings: 4, image: 'salsa-roja.webp',
+    ingredients: [
+      '4 plum tomatoes', '1 jalapeño', '1/4 white onion', '1 garlic clove, unpeeled',
+      '1 tbsp lime juice', '2 tbsp coriander leaves', '1/2 tsp salt'
+    ],
+    steps: [
+      'Heat a dry heavy pan over medium-high heat. Add the tomatoes, jalapeño, onion and unpeeled garlic. Turn often until charred in patches. Remove the garlic and onion as soon as soft and give the tomatoes 10–12 minutes.',
+      'Let the vegetables cool enough to handle. Peel the garlic and remove the jalapeño stem. Remove its seeds for a milder salsa.',
+      'Pulse the charred vegetables with the lime juice, coriander and salt until chunky, or chop them finely by hand. Rest for 5 minutes before serving.'
+    ]
+  },
+  {
+    id: 'esquites', title: 'Skillet Corn Esquites', cuisine: 'Mexican',
+    description: 'Sweet corn kernels char in a skillet and get folded into a tangy lime dressing while still warm.',
+    diet: ['Vegetarian'], category: 'Side', time: 20, servings: 3, image: 'esquites.webp',
+    ingredients: [
+      '350 g sweetcorn kernels, thawed and dried if frozen', '1 tbsp butter', '1 jalapeño, finely diced',
+      '2 tbsp mayonnaise', '2 tbsp sour cream', '1 tbsp lime juice', '35 g crumbled vegetarian feta',
+      '1/2 tsp mild chilli powder', '2 tbsp chopped coriander leaves'
+    ],
+    steps: [
+      'Melt the butter in a wide skillet over medium-high heat. Add the corn in a single layer and cook for 3 minutes without stirring so it chars in spots.',
+      'Stir in the jalapeño and cook for 4–5 minutes more, until the corn is tender with brown edges.',
+      'Mix the mayonnaise, sour cream and lime juice in a bowl. Fold in the warm corn and half the cheese.',
+      'Divide into small bowls and scatter over the remaining cheese, mild chilli powder and coriander.'
+    ]
+  },
+  {
+    id: 'sesame-noodles', title: 'Chinese Sesame Noodles', cuisine: 'Chinese',
+    description: 'Nutty sesame paste, vinegar and ginger make a glossy sauce for cool noodles and crunchy cucumber.',
+    diet: ['Vegan', 'Dairy-free'], category: 'Lunch', time: 20, servings: 2, image: 'sesame-noodles.webp',
+    ingredients: [
+      '180 g dried egg-free wheat noodles', '2 tbsp Chinese sesame paste or unsweetened tahini',
+      '1 tbsp light soy sauce', '2 tsp rice vinegar', '1 tsp sugar', '1 tsp toasted sesame oil',
+      '1 tsp grated ginger', '3 tbsp warm water', '1/2 cucumber, cut into matchsticks',
+      '1 spring onion, sliced', '1 tsp toasted sesame seeds'
+    ],
+    steps: [
+      'Boil the noodles according to the packet, then drain and rinse under cool water. Shake off as much water as possible.',
+      'Whisk the sesame paste, soy sauce, vinegar, sugar, sesame oil and ginger. Add the warm water a spoonful at a time until the sauce flows from the whisk.',
+      'Toss the drained noodles with the sauce. Divide between bowls and finish with cucumber matchsticks, spring onion and sesame seeds.'
+    ]
+  },
+  {
+    id: 'mapo-tofu', title: 'Mushroom Mapo Tofu', cuisine: 'Chinese',
+    description: 'Finely chopped mushrooms bring texture to this meat-free Sichuan-style tofu with fermented chilli bean paste and fragrant peppercorn.',
+    diet: ['Vegan', 'Dairy-free'], category: 'Dinner', time: 30, servings: 3, image: 'mapo-tofu.webp',
+    ingredients: [
+      '400 g medium tofu, cut into 2 cm cubes', '150 g fresh shiitake mushrooms, finely chopped',
+      '1 tbsp neutral oil', '1/2 tsp Sichuan peppercorns', '2 garlic cloves, minced',
+      '2 tsp grated ginger', '1 tbsp doubanjiang (chilli bean paste)', '250 ml vegetable stock',
+      '2 tsp cornflour', '2 tbsp cold water', '2 spring onions, sliced'
+    ],
+    steps: [
+      'Toast the Sichuan peppercorns in a dry pan for about a minute, until fragrant. Crush them finely with a mortar or the bottom of a mug.',
+      'Heat the oil in a wide pan. Fry the chopped mushrooms for 5–6 minutes until their water evaporates and they start browning. Stir in the garlic, ginger and doubanjiang and cook for 1 minute.',
+      'Pour in the stock and bring to a gentle simmer. Slide in the tofu and cook for 5 minutes, shaking the pan to move the pieces without breaking them.',
+      'Mix the cornflour with the cold water, stir it into the simmering sauce and cook for 1–2 minutes until glossy. Sprinkle with spring onions and the ground peppercorn to taste.'
+    ]
+  },
+  {
+    id: 'tomato-egg-stir-fry', title: 'Tomato & Egg Stir-Fry', cuisine: 'Chinese',
+    description: 'Tender egg curds fold into a quick sauce of ripe tomatoes, spring onions and a pinch of sugar.',
+    diet: ['Vegetarian', 'Dairy-free', 'Gluten-free'], category: 'Lunch', time: 15, servings: 2, image: 'tomato-egg-stir-fry.webp',
+    ingredients: [
+      '4 eggs', '1/2 tsp salt, divided', '1 tbsp neutral oil, divided', '3 ripe tomatoes, cut into wedges',
+      '2 spring onions, whites and greens separated and chopped', '1/2 tsp sugar', '2 tbsp water'
+    ],
+    steps: [
+      'Beat the eggs with half the salt. Heat half the oil in a nonstick pan over medium-high heat. Pour in the eggs and draw a spatula across the pan until soft curds form. Transfer them to a plate.',
+      'Heat the remaining oil in the same pan. Stir the spring onion whites for 20 seconds, then add the tomatoes, sugar, water and remaining salt. Cook for 4–5 minutes, crushing a few wedges to release their juice.',
+      'Return the eggs to the sauce. Fold together gently for about a minute, until the eggs are set and hot. Scatter the spring onion greens over the top.'
+    ]
+  },
+  {
+    id: 'smashed-cucumber-salad', title: 'Garlic Smashed Cucumbers', cuisine: 'Chinese',
+    description: 'Craggy cucumber pieces catch a sharp garlic dressing, and a brief salting keeps the salad crisp.',
+    diet: ['Vegan', 'Dairy-free'], category: 'Side', time: 20, servings: 3, image: 'smashed-cucumber-salad.webp',
+    ingredients: [
+      '2 cucumbers, about 450 g', '1/2 tsp salt', '2 garlic cloves, finely grated',
+      '1 tbsp Chinese black vinegar or rice vinegar', '2 tsp light soy sauce', '1 tsp sugar',
+      '1 tsp toasted sesame oil', '1 tsp chilli oil', '1 tsp toasted sesame seeds'
+    ],
+    steps: [
+      'Trim the ends off the cucumbers. Lightly crush them along their length with a rolling pin until they split, then cut into bite-size pieces.',
+      'Toss the cucumber with the salt and leave in a colander for 10 minutes. Shake well to drain off the liquid.',
+      'Whisk the garlic, vinegar, soy sauce, sugar and both oils. Toss with the cucumber just before serving and scatter over sesame seeds.'
+    ]
+  },
+  {
+    id: 'miso-ramen', title: 'Mushroom Miso Ramen', cuisine: 'Japanese',
+    description: 'Shiitake mushrooms deepen a quick miso broth. Sweet corn and spring onion add crunch to each bowl.',
+    diet: ['Vegan', 'Dairy-free'], category: 'Dinner', time: 30, servings: 2, image: 'miso-ramen.webp',
+    ingredients: [
+      '180 g dried egg-free ramen noodles', '1 tbsp neutral oil', '180 g fresh shiitake mushrooms, sliced',
+      '2 cloves garlic, minced', '2 tsp grated ginger', '800 ml vegetable stock',
+      '80 g sweetcorn kernels', '2 small heads bok choy, quartered', '2 tbsp white miso',
+      '1 tsp toasted sesame oil', '2 spring onions, sliced'
+    ],
+    steps: [
+      'Heat the neutral oil in a pot over medium-high heat. Sear the mushrooms for 5 minutes, then stir in the garlic and ginger for 30 seconds.',
+      'Pour in the stock and bring to a simmer. Add the corn and bok choy and simmer for 3–4 minutes until tender.',
+      'In a separate pot, cook the ramen according to the packet. Drain and divide between two deep bowls.',
+      'Turn off the broth heat. Mix the miso with a ladle of warm broth in a small bowl until smooth, then stir it back into the pot with the sesame oil. Ladle over the noodles, arrange the vegetables on top and add spring onion.'
+    ]
+  },
+  {
+    id: 'vegetable-tempura', title: 'Crisp Vegetable Tempura', cuisine: 'Japanese',
+    description: 'A lightly mixed, ice-cold batter coats thin sweet potato, green beans and shiitake mushrooms.',
+    diet: ['Vegan', 'Dairy-free'], category: 'Dinner', time: 35, servings: 3, image: 'vegetable-tempura.webp',
+    ingredients: [
+      '1 small sweet potato, about 180 g', '100 g green beans, trimmed', '6 fresh shiitake caps',
+      '90 g plain flour, plus 2 tbsp for dusting', '30 g cornflour', '170 ml ice-cold sparkling water',
+      '500 ml neutral oil for frying in a small deep pan', '1/2 tsp fine salt', '1 lemon, cut into wedges'
+    ],
+    steps: [
+      'Slice the sweet potato into rounds about 3 mm thick. Halve any large mushroom caps and pat all the vegetables dry. Dust them lightly with the extra flour and shake off the excess.',
+      'Pour the oil into a deep, heavy saucepan, keeping it well below halfway up the sides. Heat to 175°C. Set a wire rack over a tray beside the stove.',
+      'Just before frying, stir the flour, cornflour and ice-cold sparkling water together briefly. A few lumps are fine. Dip a few vegetables at a time, letting excess batter drip away.',
+      'Lower them into the oil in small batches and turn once. Beans and mushrooms take about 2–3 minutes and sweet potato about 3–4 minutes. Check a potato slice for tenderness. Drain on the rack, allow the oil to return to temperature and repeat. Season with salt and serve with lemon.'
+    ]
+  },
+  {
+    id: 'sesame-spinach', title: 'Spinach Goma-ae', cuisine: 'Japanese',
+    description: 'Blanched spinach is squeezed dry and dressed with freshly ground sesame, soy and a little sugar.',
+    diet: ['Vegan', 'Dairy-free'], category: 'Side', time: 15, servings: 2, image: 'sesame-spinach.webp',
+    ingredients: [
+      '250 g spinach, washed', '2 tbsp white sesame seeds', '2 tsp soy sauce',
+      '1 tsp sugar', '1 tsp water'
+    ],
+    steps: [
+      'Toast the sesame seeds in a dry pan over a gentle heat, stirring until lightly golden. Transfer to a mortar and grind until most seeds are crushed but some texture remains.',
+      'Lower the spinach into boiling water for about 30 seconds, just until wilted. Drain and cool quickly under cold water. Squeeze out excess water in small handfuls and cut the greens into short lengths.',
+      'Stir the soy sauce, sugar and water into the sesame. Loosen the spinach with your fingers, toss it with the dressing and divide into small bowls.'
+    ]
+  },
+  {
+    id: 'teriyaki-tofu', title: 'Pan-Glazed Teriyaki Tofu', cuisine: 'Japanese',
+    description: 'Sear tofu until crisp, then reduce soy, mirin and sugar around the slices until they shine.',
+    diet: ['Vegan', 'Dairy-free'], category: 'Dinner', time: 25, servings: 2, image: 'teriyaki-tofu.webp',
+    ingredients: [
+      '300 g firm tofu, drained', '2 tbsp cornflour', '1 tbsp neutral oil',
+      '2 tbsp soy sauce', '2 tbsp mirin', '1 tsp sugar', '2 tbsp water',
+      '1 spring onion, thinly sliced', '1 tsp toasted sesame seeds'
+    ],
+    steps: [
+      'Wrap the tofu in a clean towel, press gently to remove excess moisture, then cut it into eight thick slices. Dust the slices on both sides with cornflour.',
+      'Heat the oil over medium heat in a nonstick pan. Sear the tofu for 3–4 minutes per side until crisp and golden.',
+      'Mix the soy sauce, mirin, sugar and water. Pour into the pan and simmer for 1–2 minutes, turning the tofu as the sauce thickens.',
+      'Transfer to plates while there is still enough glaze to spoon over the slices. Finish with spring onion and sesame seeds.'
+    ]
+  },
+  {
+    id: 'bibimbap', title: 'Garden Vegetable Bibimbap', cuisine: 'Korean',
+    description: 'Arrange warm rice, sesame vegetables and a fried egg in separate sections, then mix them together with gochujang at the table.',
+    diet: ['Vegetarian', 'Dairy-free'], category: 'Dinner', time: 35, servings: 2, image: 'bibimbap.webp',
+    ingredients: [
+      '2 cups hot cooked short-grain rice', '1 carrot, cut into thin matchsticks',
+      '150 g fresh mushrooms, sliced', '120 g spinach', '1 small courgette, cut into matchsticks',
+      '1 tbsp neutral oil, divided', '2 eggs', '1/4 tsp salt', '2 tsp toasted sesame oil, divided',
+      '1 tbsp gochujang', '1 tsp rice vinegar', '2 tsp water', '1 tsp toasted sesame seeds'
+    ],
+    steps: [
+      'Whisk the gochujang, vinegar, water and half the sesame oil in a small bowl to make the mixing sauce.',
+      'Wilt the spinach in a covered pan with a spoonful of water. Drain and gently squeeze, then toss with the remaining sesame oil and a pinch of the salt.',
+      'Using the neutral oil a little at a time, sauté the carrot, courgette and mushrooms separately in the same pan, seasoning lightly with the remaining salt. Allow 2–3 minutes for each vegetable and 4–5 minutes for the mushrooms. Set each aside separately.',
+      'Use the remaining oil to fry the eggs to your liking. Divide the hot rice between two bowls. Arrange the vegetables in groups on top, add an egg and sesame seeds, and serve with the gochujang sauce for mixing.'
+    ]
+  },
+  {
+    id: 'tteokbokki', title: 'Gochujang Tteokbokki', cuisine: 'Korean',
+    description: 'Chewy rice cakes simmer in a sweet, spicy gochujang sauce that thickens as the cakes soften.',
+    diet: ['Vegan', 'Dairy-free'], category: 'Snack', time: 30, servings: 2, image: 'tteokbokki.webp',
+    ingredients: [
+      '350 g plain cylindrical Korean rice cakes (garaetteok)', '450 ml vegetable stock',
+      '2 tbsp gochujang', '1 tsp gochugaru', '1 tbsp soy sauce', '2 tsp sugar',
+      '1 small onion, thinly sliced', '2 spring onions, cut into 3 cm lengths',
+      '1 tsp toasted sesame seeds'
+    ],
+    steps: [
+      'If the rice cakes are refrigerated and firm, separate them and soak in warm water for 10 minutes while making the sauce. Thaw frozen rice cakes first as directed on the packet. Drain.',
+      'Whisk the stock, gochujang, gochugaru, soy sauce and sugar in a wide pan. Add the onion and bring to a gentle boil.',
+      'Add the rice cakes and simmer uncovered for 8–12 minutes, stirring often so they do not stick. Taste a rice cake to check the centre is soft and chewy. Add a splash of water if the sauce thickens too soon.',
+      'Stir in the spring onions for the last minute. Spoon into bowls, coat with the remaining sauce and finish with sesame seeds.'
+    ]
+  },
+  {
+    id: 'scallion-pajeon', title: 'Crispy Scallion Pajeon', cuisine: 'Korean',
+    description: 'A thin rice-flour batter and a hot pan give these spring onion pancakes golden, lacy edges.',
+    diet: ['Vegan', 'Dairy-free'], category: 'Snack', time: 25, servings: 2, image: 'scallion-pajeon.webp',
+    ingredients: [
+      '6 spring onions', '65 g plain flour', '25 g rice flour', '1/4 tsp salt',
+      '110 ml cold water', '2 tbsp neutral oil, divided', '1 tbsp soy sauce',
+      '2 tsp rice vinegar', '1 tsp toasted sesame seeds'
+    ],
+    steps: [
+      'Trim the spring onions, cut them into 5 cm lengths and split any thick white pieces lengthwise.',
+      'Stir the flours, salt and water together just until combined. Fold in the spring onions. Mix the soy sauce, vinegar and sesame seeds separately for dipping.',
+      'Heat half the oil in a nonstick pan over medium-high heat. Spread half the batter in a thin circle. Fry for 3–4 minutes until the underside is golden and the edges are crisp.',
+      'Turn with a wide spatula and cook for 2–3 minutes more. Repeat with the remaining oil and batter. Cut the pancakes into wedges and serve hot with the dipping sauce.'
+    ]
+  },
+  {
+    id: 'oi-muchim', title: 'Spicy Cucumber Oi Muchim', cuisine: 'Korean',
+    description: 'A quick toss with gochugaru, garlic and sesame seasons crisp cucumber for an easy banchan.',
+    diet: ['Vegan', 'Dairy-free'], category: 'Side', time: 15, servings: 3, image: 'oi-muchim.webp',
+    ingredients: [
+      '3 small cucumbers, about 350 g', '1/2 tsp salt', '1 spring onion, thinly sliced',
+      '1 small garlic clove, grated', '2 tsp gochugaru', '2 tsp rice vinegar',
+      '1 tsp soy sauce', '1 tsp toasted sesame oil', '1/2 tsp sugar', '1 tsp toasted sesame seeds'
+    ],
+    steps: [
+      'Slice the cucumbers into rounds about 4 mm thick. Toss with the salt in a colander and leave to drain for 8 minutes.',
+      'Mix the spring onion, garlic, gochugaru, vinegar, soy sauce, sesame oil and sugar in a bowl.',
+      'Pat the cucumber dry, then toss with the dressing until evenly coated. Sprinkle with sesame seeds and serve straight away.'
+    ]
+  }
+].map(recipe => ({
+  ...recipe, status: 'approved', author: 'Supperclub Kitchen', baseRating: 0, baseCount: 0
+})));

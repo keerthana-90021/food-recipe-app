@@ -24,11 +24,11 @@ To check a production build locally, run `npm run build`, then `npm run preview`
 
 | Role | What the reviewer can do |
 | --- | --- |
-| Guest | Browse the catalogue, search by ingredient, filter by cuisine or dietary preference, and open ingredients and step-by-step instructions. |
-| User | Create an account, sign in, save dishes, organize them into named collections, rate a recipe, share a recipe, and submit a new dish for review. |
+| Guest | Browse the catalogue, search by ingredient, filter by cuisine or dietary preference, and follow a recipe one step at a time in Cook mode in the React edition. |
+| User | Save dishes, organize collections, rate or share a recipe, and submit a dish for review. The React edition also lets a user plan breakfast, lunch, and dinner by date and check off the week's shopping list. |
 | Admin | Sign in to the administration area, inspect submissions, and approve or decline them. Approval makes the recipe visible in this browser's catalogue. |
 
-Choose **Create an account** to register as a user. Use a sample email and a password of at least eight characters.
+Choose **Create an account** and confirm a passphrase of at least 15 characters. After the account confirmation, sign in using the prefilled email and your passphrase. Existing accounts can use their original password.
 
 **Reviewer admin account**
 
@@ -47,7 +47,7 @@ Each browser profile and site origin has its own records. For the moderation dem
 ## Five-minute review walkthrough
 
 1. **Discovery.** Open the home page. Search for an ingredient from one of the recipe cards, try a cuisine or dietary filter, then open a recipe and show its ingredients and numbered steps.
-2. **Personalization.** Create a sample User account, save a dish, and create a collection named *Weeknight dinners*. Add a recipe to it and refresh the page to show persistence.
+2. **Personalization.** Register and sign in. Save a dish to your cookbook, then schedule it for dinner in the meal planner. Open the shopping list, check off an ingredient, and refresh to show that the plan and checklist were saved.
 3. **Participation.** Rate a recipe and change the rating once. Submit a dish with a title, cuisine, time, servings, ingredients, and instructions. Show its review status.
 4. **Moderation.** Sign out and log in with the reviewer Admin account above. Open the pending submission and approve it.
 5. **Verification.** Sign out, find the newly approved dish as a guest, and open its share link. Visit `/review-1/` at the same origin to demonstrate the plain JavaScript edition using the same data.

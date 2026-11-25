@@ -111,14 +111,16 @@
       <section class="panel"><h3>Add to collections</h3>${user ? `${toggles}<a class="under" href="#collections">Manage collections</a>` : '<button class="textbtn under" data-action="signin">Log in to organize your recipes</button>'}</section></div>` : ''}`;
   }
   function auth(register) {
+    const receipt = register ? null : store.recentSignup();
     main.innerHTML = `<div class="authbox panel"><form id="${register ? 'signup' : 'login'}" class="formgrid">${eyebrow('Your cookbook')}
       <h1>${register ? 'Join Supperclub' : 'Welcome back'}</h1>
+      ${receipt ? `<p role="status"><strong>Congratulations, ${html(receipt.name)}!</strong> Your account is ready. Sign in with the email and password you just registered.</p>` : ''}
       ${register ? '<label>Your name<input name="name" autocomplete="name" required maxlength="80"></label>' : ''}
-      <label>Email address<input type="email" name="email" autocomplete="email" required></label>
-      <label>Password<input type="password" name="password" autocomplete="${register ? 'new-password' : 'current-password'}" required ${register ? 'minlength="8" maxlength="128"' : ''}>${register ? '<span class="tip">Use at least 8 characters.</span>' : ''}</label>
+      <label>Email address<input type="email" name="email" autocomplete="username" required maxlength="254" value="${html(receipt?.email || '')}"></label>
+      <label>Password<input type="password" name="password" autocomplete="${register ? 'new-password' : 'current-password'}" required maxlength="128" minlength="${register ? store.passwordMinLength : 1}">${register ? `<span class="tip">Use at least ${store.passwordMinLength} characters. Several words make a memorable passphrase.</span>` : ''}</label>
+      ${register ? '<label>Confirm password<input type="password" name="confirmation" autocomplete="new-password" required maxlength="128"></label>' : ''}
       <p class="form-error" role="alert"></p><button class="button" type="submit">${register ? 'Create account' : 'Log in'}</button>
-      <p>${register ? 'Already a member? <a href="#login">Log in</a>' : 'New to Supperclub? <a href="#signup">Create an account</a>'}</p></form>
-      ${register ? '' : '<details><summary>Admin review account</summary><p>Email <b>admin@supperclub.test</b><br>Password <b>KitchenAdmin27!</b></p></details>'}</div>`;
+      <p>${register ? 'Already a member? <a href="#login">Log in</a>' : 'New to Supperclub? <a href="#signup">Create an account</a>'}</p></form></div>`;
   }
   function cookedCollection(id) {
     const person = current();
@@ -247,8 +249,13 @@
     if (submit.disabled) return;
     submit.disabled = true;
     try {
-      if (form.id === 'login' || form.id === 'signup') {
-        const user = form.id === 'login' ? await store.login(data.email, data.password) : await store.signup(data.name, data.email, data.password);
+      if (form.id === 'signup') {
+        if (data.password !== data.confirmation) throw new Error('Your passwords do not match. Enter the same password in both fields.');
+        await store.signup(data.name, data.email, data.password);
+        form.reset();
+        go('login');
+      } else if (form.id === 'login') {
+        const user = await store.login(data.email, data.password);
         const destination = user.role === 'admin' ? 'admin' : returnTo && !returnTo.startsWith('admin') ? returnTo : 'collections';
         returnTo = ''; go(destination); say(`Welcome, ${user.name}.`);
       } else if (form.id === 'collection') {
@@ -265,6 +272,7 @@
   });
   window.addEventListener('hashchange', () => { render(); window.scrollTo(0,0); main.focus({preventScroll:true}); });
   window.addEventListener('storage', () => render());
+  window.addEventListener('supperclub:session-expired', render);
   render();
 })();
 

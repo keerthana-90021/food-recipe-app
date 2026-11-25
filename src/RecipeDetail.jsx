@@ -1,6 +1,8 @@
 import React, {useState} from 'react';
 import {FoodImage} from './Discover.jsx';
 import {Icon} from './Icons.jsx';
+import {PlanRecipeButton} from './MealPlanner.jsx';
+import CookMode from './CookMode.jsx';
 
 export default function RecipeDetail({recipe,token,go,toggleSave,notify,user,requireLogin,refresh}) {
   const store = window.KitchenStore;
@@ -51,6 +53,7 @@ export default function RecipeDetail({recipe,token,go,toggleSave,notify,user,req
         <div className="detail-actions">
           {!snapshot && <button className="green-button button" aria-pressed={saved} onClick={()=>toggleSave(recipe.id)}><Icon name="bookmark" size={17} fill={saved}/>{saved?'Saved to cookbook':'Save recipe'}</button>}
           <button className="outline-button button" onClick={share}><Icon name="share" size={17}/>Share recipe</button>
+          {!snapshot && <PlanRecipeButton {...{recipe,user,requireLogin,notify}}/>}
         </div>
         {shareUrl && <label className="share-field">Recipe link<input aria-label="Recipe link" readOnly value={shareUrl} onFocus={e=>e.target.select()}/></label>}
         {shareText && <label className="share-field">Recipe to share<textarea rows="4" readOnly value={shareText} onFocus={e=>e.target.select()}/></label>}
@@ -60,7 +63,7 @@ export default function RecipeDetail({recipe,token,go,toggleSave,notify,user,req
       <section className="ingredients-panel"><h2>Ingredients</h2><p className="section-hint">For {recipe.servings} {recipe.servings===1?'serving':'servings'}</p>
         <ul>{recipe.ingredients.map((ingredient,i)=><li key={i}><label className={checked.includes(i)?'is-checked':''}><input type="checkbox" checked={checked.includes(i)} onChange={()=>flip(setChecked,i)}/><span>{ingredient}</span></label></li>)}</ul>
       </section>
-      <section className="method-panel"><h2>Step by step</h2>
+      <section className="method-panel"><div className="method-heading"><h2>Step by step</h2><CookMode {...{recipe,done,setDone,notify}}/></div>
         <ol>{recipe.steps.map((step,i)=><li key={i}><button className={'step-number'+(done.includes(i)?' complete':'')} onClick={()=>flip(setDone,i)} aria-label={'Mark step '+(i+1)+(done.includes(i)?' incomplete':' complete')} aria-pressed={done.includes(i)}>{done.includes(i)?<Icon name="check" size={17}/>:i+1}</button><p>{step}</p></li>)}</ol>
         {!snapshot && <div className="rating-panel"><h3>Rate this recipe</h3><p>{score.mine?'Your rating: '+score.mine+' out of 5.':'How did it turn out?'}</p><div className="rating-stars" aria-label="Rate recipe">{[1,2,3,4,5].map(n=><button key={n} aria-label={'Rate '+n+' out of 5'} aria-pressed={score.mine===n} onClick={()=>rate(n)}><Icon name="star" size={28} fill={n<=score.mine}/></button>)}</div></div>}
       </section>

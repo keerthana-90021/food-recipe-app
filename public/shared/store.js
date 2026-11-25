@@ -3,10 +3,20 @@
   'use strict';
 
   const prefix = 'supperclub.v1/';
+  const passwordMinLength = 15;
+  const passwordVersion = 2;
+  const passwordAlgorithm = 'PBKDF2-SHA256';
+  const passwordIterations = 600000;
+  const legacyIterations = 100000;
+  const sessionDuration = 8 * 60 * 60 * 1000;
+  let expiryTimer;
+  let scheduledExpiry = 0;
+  let signupReceipt = null;
   const admin = {
     id: 'demo-admin', name: 'Kitchen Admin', role: 'admin', email: 'admin@supperclub.test',
-    salt: '581f3b9b03709c7b868c876dac780639',
-    hash: 'de2db5229c19d94a60fcda2151c2232840fce6bc389b18b99c067030da362133'
+    passwordVersion, passwordAlgorithm, passwordIterations,
+    salt: 'f3e6695d5a81a198a4e8ee7914ae34e6',
+    hash: '7de49fc6d0419552f1536b1c3e375b5aa239b15c7b0b5d20d8e4968248a78913'
   };
 
   function key(group, ...parts) {
@@ -57,17 +67,37 @@
 
   function publicUser(person) {
     if (!person) return null;
-    const { id, name, role, email } = person;
-    return { id, name, role, email };
+    const { id, name, email } = person;
+    return { id, name, email, role: person === admin ? 'admin' : 'user' };
   }
 
   function findAccount(email) {
     return email === admin.email ? admin : read(key('accounts', email));
   }
 
+  function scheduleExpiry(expiresAt) {
+    if (scheduledExpiry === expiresAt || !window.setTimeout) return;
+    window.clearTimeout(expiryTimer);
+    scheduledExpiry = expiresAt;
+    if (expiresAt) {
+      expiryTimer = window.setTimeout(() => {
+        scheduledExpiry = 0;
+        if (!currentUser()) window.dispatchEvent(new Event('supperclub:session-expired'));
+      }, Math.max(0, expiresAt - Date.now()));
+    }
+  }
+
   function currentUser() {
-    const email = read(key('session'));
-    return email ? publicUser(findAccount(email)) : null;
+    const session = read(key('session'));
+    if (!session) { scheduleExpiry(0); return null; }
+    // The previous email-only session has no expiry. Its owner can sign in again.
+    if (typeof session.email !== 'string' || !Number.isFinite(session.expiresAt) || session.expiresAt <= Date.now()) {
+      write(key('session'), null);
+      scheduleExpiry(0);
+      return null;
+    }
+    scheduleExpiry(session.expiresAt);
+    return publicUser(findAccount(session.email));
   }
 
   function requireUser() {
@@ -80,7 +110,7 @@
     if (requireUser().role !== 'admin') throw new Error('Only an administrator can do that.');
   }
 
-  async function passwordHash(password, salt) {
+  async function passwordHash(password, salt, iterations) {
     if (!window.crypto || !crypto.subtle) {
       throw new Error('Open the app on localhost or HTTPS to sign in.');
     }
@@ -89,24 +119,46 @@
     );
     const bytes = Uint8Array.from(salt.match(/../g), part => parseInt(part, 16));
     const result = await crypto.subtle.deriveBits(
-      { name: 'PBKDF2', salt: bytes, hash: 'SHA-256', iterations: 100000 }, material, 256
+      { name: 'PBKDF2', salt: bytes, hash: 'SHA-256', iterations }, material, 256
     );
     return hex(new Uint8Array(result));
+  }
+
+  async function passwordRecord(password) {
+    const salt = id();
+    return { salt, hash: await passwordHash(password, salt, passwordIterations),
+      passwordVersion, passwordAlgorithm, passwordIterations };
+  }
+
+  // This optional per-tab hint pre-fills the next login form. It grants no access.
+  function rememberSignup(receipt) {
+    signupReceipt = receipt;
+    try {
+      if (receipt) window.sessionStorage.setItem(key('signup-receipt'), JSON.stringify(receipt));
+      else window.sessionStorage.removeItem(key('signup-receipt'));
+    } catch { /* The in-memory hint still works when session storage is unavailable. */ }
+  }
+
+  function recentSignup() {
+    try {
+      const receipt = JSON.parse(window.sessionStorage.getItem(key('signup-receipt')));
+      return receipt && typeof receipt.name === 'string' && typeof receipt.email === 'string' ? receipt : signupReceipt;
+    } catch { return signupReceipt; }
   }
 
   async function signup(name, email, password) {
     name = text(name, 'your name', 80);
     email = text(email, 'your email address', 254).toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Enter a valid email address.');
-    if (typeof password !== 'string' || password.length < 8 || password.length > 128) {
-      throw new Error('Use a password between 8 and 128 characters.');
+    if (typeof password !== 'string' || [...password].length < passwordMinLength || password.length > 128) {
+      throw new Error('Use a passphrase between ' + passwordMinLength + ' and 128 characters.');
     }
-    const salt = id();
-    const person = { id: id(), name, email, role: 'user', salt, hash: await passwordHash(password, salt) };
+    const passwordFields = await passwordRecord(password);
+    const person = { id: id(), name, email, role: 'user', ...passwordFields };
     const register = () => {
       if (findAccount(email)) throw new Error('An account with this email already exists. Sign in instead.');
       write(key('accounts', email), person);
-      write(key('session'), email);
+      rememberSignup({ name, email });
       return publicUser(person);
     };
     return window.navigator?.locks ? navigator.locks.request(key('accounts', email), register) : register();
@@ -114,16 +166,28 @@
 
   async function login(email, password) {
     const person = findAccount(text(email, 'your email address', 254).toLowerCase());
+    const legacy = person && person.passwordVersion === undefined;
+    const knownVersion = person?.passwordVersion === passwordVersion &&
+      person.passwordAlgorithm === passwordAlgorithm && person.passwordIterations === passwordIterations;
     if (!person || typeof password !== 'string' || password.length > 128 ||
-        await passwordHash(password, person.salt) !== person.hash) {
+        (!legacy && !knownVersion) ||
+        await passwordHash(password, person.salt, legacy ? legacyIterations : passwordIterations) !== person.hash) {
       throw new Error('The email or password is incorrect.');
     }
-    write(key('session'), person.email);
+    if (legacy) {
+      write(key('accounts', person.email), { ...person, ...await passwordRecord(password) });
+    }
+    const expiresAt = Date.now() + sessionDuration;
+    write(key('session'), {email:person.email, expiresAt});
+    scheduleExpiry(expiresAt);
+    rememberSignup(null);
     return publicUser(person);
   }
 
   function logout() {
     write(key('session'), null);
+    scheduleExpiry(0);
+    rememberSignup(null);
   }
 
   function users() {
@@ -300,7 +364,7 @@
   }
 
   window.KitchenStore = Object.freeze({
-    currentUser, signup, login, logout, users, recipes, submitRecipe, moderate,
+    currentUser, signup, recentSignup, passwordMinLength, login, logout, users, recipes, submitRecipe, moderate,
     collections, createCollection, setCollection, isSaved, save, rating, rate, shareToken, readShare
   });
 })();

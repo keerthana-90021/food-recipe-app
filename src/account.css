@@ -56,9 +56,8 @@
 .ac-password button { background: transparent; border: 0; padding: .65rem .75rem; font-size: .85rem; position: absolute; right: 0; top: 50%; transform: translateY(-50%); color: var(--ac-forest); }
 .ac-auth-form .ac-form > .ac-button { margin-top: .4rem; }
 .ac-page .ac-switch { text-align: center; color: var(--ac-muted); margin-block: 1.3rem; font-size: .9rem; }
-.ac-demo { font-size: .88rem; color: var(--ac-muted); border-top: 1px solid var(--ac-line); padding-top: 1rem; }
-.ac-demo summary { cursor: pointer; color: var(--ac-forest); }
-.ac-demo p { margin-block: .55rem; line-height: 1.7; }
+.ac-page .ac-auth-success { background: #e9f1e6; border-left: 3px solid var(--ac-forest); color: #24462c; border-radius: 4px; margin-block: 1rem 1.5rem; padding: .85rem 1rem; }
+.ac-auth-success strong { display: block; margin-bottom: .2rem; }
 .ac-auth-photo { position: relative; min-height: 360px; background: #e6dccb; }
 .ac-auth-photo img { width: 100%; height: 100%; object-fit: cover; display: block; position: absolute; }
 .ac-auth-photo figcaption { position: absolute; bottom: 1rem; left: 1rem; right: 1rem; width: fit-content; background: #fff8ed; color: #263d28; padding: .45rem .8rem; font-family: var(--ac-serif); font-style: italic; border-radius: 4px; }

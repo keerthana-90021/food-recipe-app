@@ -28,9 +28,11 @@ function Gate({ admin = false, user, go }) {
 
 export function AuthPage({ mode, go, notify, refresh, returnTo }) {
   const signup = mode === 'signup';
+  const [receipt] = useState(() => signup ? null : kitchen().recentSignup());
   const [name,setName] = useState('');
-  const [email,setEmail] = useState('');
+  const [email,setEmail] = useState(receipt?.email || '');
   const [password,setPassword] = useState('');
+  const [confirmation,setConfirmation] = useState('');
   const [visible,setVisible] = useState(false);
   const [busy,setBusy] = useState(false);
   const [error,setError] = useState('');
@@ -38,6 +40,7 @@ export function AuthPage({ mode, go, notify, refresh, returnTo }) {
   function switchMode() {
     setError('');
     setPassword('');
+    setConfirmation('');
     setVisible(false);
     go(signup ? 'login' : 'signup');
   }
@@ -47,11 +50,17 @@ export function AuthPage({ mode, go, notify, refresh, returnTo }) {
     setBusy(true);
     setError('');
     try {
-      const user = signup
-        ? await kitchen().signup(name.trim(), email.trim(), password)
-        : await kitchen().login(email.trim(), password);
+      if (signup) {
+        if (password !== confirmation) throw new Error('Your passwords do not match. Enter the same password in both fields.');
+        await kitchen().signup(name.trim(), email.trim(), password);
+        setPassword('');
+        setConfirmation('');
+        go('login');
+        return;
+      }
+      const user = await kitchen().login(email.trim(), password);
       refresh();
-      notify(signup ? 'Your kitchen is ready.' : 'Signed in as ' + user.name + '.');
+      notify('Signed in as ' + user.name + '.');
       go(user.role === 'admin' ? 'admin' : (returnTo || 'discover').replace(/^#\/?/, ''));
     } catch (failure) {
       setError(failure.message);
@@ -63,23 +72,21 @@ export function AuthPage({ mode, go, notify, refresh, returnTo }) {
     <div className="ac-auth-shell">
       <div className="ac-auth-form">
         <h1>{signup ? 'Make yourself at home.' : 'Welcome back.'}</h1>
-        <p className="ac-intro">{signup ? 'Create an account to build your cookbook and share what you cook.' : 'Sign in to open your cookbook and pick up where you left off.'}</p>
+        {receipt
+          ? <p className="ac-auth-success" role="status"><strong>Congratulations, {receipt.name}!</strong> Your account is ready. Sign in with the email and password you just registered.</p>
+          : <p className="ac-intro">{signup ? 'Create an account to build your cookbook and share what you cook.' : 'Sign in to open your cookbook and pick up where you left off.'}</p>}
         <form className="ac-form" onSubmit={authenticate}>
           {signup && <label>Your name<input autoComplete="name" required maxLength={80} value={name} onChange={e => setName(e.target.value)} /></label>}
-          <label>Email address<input type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} /></label>
+          <label>Email address<input name="email" type="email" autoComplete="username" maxLength={254} required value={email} onChange={e => setEmail(e.target.value)} /></label>
           <label>Password
-            <span className="ac-password"><input type={visible ? 'text' : 'password'} autoComplete={signup ? 'new-password' : 'current-password'} minLength={signup ? 8 : 1} maxLength={128} required value={password} onChange={e => setPassword(e.target.value)} /><button type="button" onClick={() => setVisible(!visible)}>{visible ? 'Hide' : 'Show'}</button></span>
-            {signup && <small>Use at least 8 characters.</small>}
+            <span className="ac-password"><input name="password" aria-label="Password" type={visible ? 'text' : 'password'} autoComplete={signup ? 'new-password' : 'current-password'} minLength={signup ? kitchen().passwordMinLength : 1} maxLength={128} required value={password} onChange={e => setPassword(e.target.value)} /><button type="button" aria-label={visible ? 'Hide password' : 'Show password'} aria-pressed={visible} onClick={() => setVisible(!visible)}>{visible ? 'Hide' : 'Show'}</button></span>
+            {signup && <small>Use at least {kitchen().passwordMinLength} characters. Several words make a memorable passphrase.</small>}
           </label>
+          {signup && <label>Confirm password<input name="confirmation" autoComplete="new-password" type={visible ? 'text' : 'password'} required maxLength={128} value={confirmation} onChange={e => setConfirmation(e.target.value)}/></label>}
           <ErrorMessage message={error}/>
           <button className="ac-button" disabled={busy}>{busy ? 'Please wait…' : signup ? 'Create account' : 'Sign in'}</button>
         </form>
         <p className="ac-switch">{signup ? 'Already have an account? ' : 'New to Supperclub? '}<button className="ac-link" onClick={switchMode}>{signup ? 'Sign in' : 'Create an account'}</button></p>
-        {!signup && <details className="ac-demo">
-          <summary>Reviewer admin account</summary>
-          <p>Email <code>admin@supperclub.test</code><br/>Password <code>KitchenAdmin27!</code></p>
-          <button className="ac-link" onClick={() => {setEmail('admin@supperclub.test'); setPassword('KitchenAdmin27!'); setError('');}}>Fill in admin credentials</button>
-        </details>}
       </div>
       {feature?.image && <figure className="ac-auth-photo"><img src={photo(feature)} alt={feature.title}/><figcaption>{feature.title}</figcaption></figure>}
     </div>
