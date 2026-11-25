@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173e2d">
+  <meta name="description" content="Find your next meal, collect recipes, and share your own with Supperclub.">
+  <title>Supperclub · Recipe book</title>
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="../shared/recipes.js"></script>
+  <script defer src="../shared/store.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="mast">
+    <div class="bar wrap">
+      <a class="wordmark" href="#explore" aria-label="Supperclub home"><span class="monogram" aria-hidden="true">sc</span> Supperclub</a>
+      <nav id="nav" aria-label="Main navigation"></nav>
+    </div>
+  </header>
+  <main id="main" tabindex="-1" class="wrap"></main>
+  <footer><div class="wrap foot"><a class="wordmark small" href="#explore">Supperclub</a><span>The recipe book · Classic edition</span></div></footer>
+  <div id="notice" role="status" aria-live="polite"></div>
+  <noscript>Enable JavaScript to browse and save recipes.</noscript>
+</body>
+</html>
