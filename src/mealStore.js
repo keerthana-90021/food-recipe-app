@@ -44,19 +44,26 @@ function write(key, value) {
 
 export function addToPlan(recipeId, day, slot) {
   const key = mealKey(day, slot, recipeId);
-  const available = window.KitchenStore.recipes().some(recipe => recipe.id === recipeId && recipe.status === 'approved');
+  const recipes = window.KitchenStore.recipes().filter(recipe => recipe.status === 'approved');
+  const available = recipes.some(recipe => recipe.id === recipeId);
   if (!available) throw new Error('Choose a published recipe.');
-  if (localStorage.getItem(key) !== null) return false;
+  const meals = plannedMeals(day, recipes);
+  if (meals.some(meal=>meal.day === day && meal.slot === slot && meal.recipeId === recipeId)) return false;
+  pruneBought(day, meals);
   write(key, JSON.stringify({day, slot, recipeId}));
   return true;
 }
 
 export function removeFromPlan(recipeId, day, slot) {
   write(mealKey(day, slot, recipeId), null);
+  const recipes = window.KitchenStore.recipes().filter(recipe => recipe.status === 'approved');
+  pruneBought(day,plannedMeals(day,recipes));
 }
 
 export function plannedMeals(day, approvedRecipes) {
   const prefix = weekKey(day) + 'meal/';
+  const first = weekStart(day);
+  const weekDays = new Set(Array.from({length:7},(_,index)=>shiftDay(first,index)));
   const recipes = new Map(approvedRecipes.map(recipe => [recipe.id, recipe]));
   const meals = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -66,7 +73,9 @@ export function plannedMeals(day, approvedRecipes) {
     try { meal = JSON.parse(localStorage.getItem(key)); }
     catch { continue; }
     const recipe = recipes.get(meal?.recipeId);
-    if (recipe && slots.includes(meal.slot)) meals.push({...meal, recipe});
+    if (!recipe || !slots.includes(meal.slot) || !weekDays.has(meal.day)) continue;
+    if (key !== prefix + meal.day + '/' + meal.slot + '/' + encodeURIComponent(recipe.id)) continue;
+    meals.push({day:meal.day,slot:meal.slot,recipeId:recipe.id,recipe});
   }
   return meals.sort((a, b) => a.day.localeCompare(b.day) || slots.indexOf(a.slot) - slots.indexOf(b.slot) || a.recipe.title.localeCompare(b.recipe.title));
 }
@@ -117,20 +126,36 @@ export function shoppingItems(meals) {
       lines.set(id, item);
     }
   }
-  return [...lines.values()].map(item => {
-    const {name, amount, unit} = item;
-    const label = unit ? displayAmount(amount) + ' ' + (unit === 'cup' && amount > 1 ? 'cups' : unit) + ' ' + name
-      : name + (amount > 1 ? ' × ' + amount : '');
-    return {...item, label};
-  }).sort((a, b) => a.name.localeCompare(b.name));
+  return [...lines.values()].map(item => ({...item,label:quantityLabel(item,item.amount)}))
+    .sort((a,b) => a.name.localeCompare(b.name));
+}
+
+export function quantityLabel({name,unit},amount) {
+  return unit ? displayAmount(amount) + ' ' + (unit === 'cup' && amount > 1 ? 'cups' : unit) + ' ' + name
+    : name + (amount > 1 ? ' × ' + amount : '');
 }
 
 function checkKey(day, item) {
   return weekKey(day) + 'bought/' + encodeURIComponent(item.id);
 }
 
+function pruneBought(day, meals) {
+  const prefix = weekKey(day) + 'bought/';
+  const needed = new Set(shoppingItems(meals).map(item => prefix+encodeURIComponent(item.id)));
+  for (let index=localStorage.length-1; index >= 0; index--) {
+    const key = localStorage.key(index);
+    if (key?.startsWith(prefix) && !needed.has(key)) write(key,null);
+  }
+}
+
+export function stillNeeded(day, item) {
+  const bought = Number(localStorage.getItem(checkKey(day, item)));
+  if (!Number.isFinite(bought) || bought <= 0) return item.amount;
+  return Number(Math.max(0,item.amount-bought).toFixed(6));
+}
+
 export function isBought(day, item) {
-  return localStorage.getItem(checkKey(day, item)) === String(item.amount);
+  return stillNeeded(day,item) === 0;
 }
 
 export function markBought(day, item, bought) {

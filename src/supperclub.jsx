@@ -1,10 +1,11 @@
 import React, {useEffect, useReducer, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import Discover from './Discover.jsx';
+import Discover, {MotionPreference} from './Discover.jsx';
 import RecipeDetail from './RecipeDetail.jsx';
 import MealPlanner from './MealPlanner.jsx';
 import {AuthPage, CollectionsPage, SubmitPage, AdminPage, SubmissionsPage} from './AccountPages.jsx';
 import {Icon} from './Icons.jsx';
+import {loginIntent, rememberIntent} from './loginIntent.js';
 import './supperclub.css';
 
 const store=window.KitchenStore;
@@ -47,7 +48,6 @@ function NotFound({go,message='This page could not be found.'}) {
 function App() {
   const [route,setRoute]=useState(getRoute);
   const [notice,setNotice]=useState('');
-  const [returnTo,setReturnTo]=useState(null);
   const [discoverState,setDiscoverState]=useState(defaultSearch);
   const [,refresh]=useReducer(n=>n+1,0);
   const timer=useRef();
@@ -60,25 +60,41 @@ function App() {
   const unauthorised=page==='admin' && user && user.role!=='admin';
   const go=target=>{const next=String(target||'discover').replace(/^#\/?/,'');location.hash=next;};
   const openRecipe=id=>go('recipe/'+encodeURIComponent(id));
-  const requireLogin=()=>{setReturnTo(route);go('login');};
+  const requireLogin=()=>{rememberIntent(path);go('login');};
   const toggleSave=id=>{
-    if(!user){setReturnTo('recipe/'+encodeURIComponent(id));go('login');return;}
+    if(!user){rememberIntent('recipe/'+encodeURIComponent(id),id);go('login');return;}
     try{const added=store.save(id);refresh();notify(added?'Saved to your cookbook.':'Removed from saved recipes.');}catch(error){notify(error.message);}
   };
+  const completeLogin = person => {
+    const intent = loginIntent();
+    let message = 'Signed in as ' + person.name + '.';
+    if (intent?.saveId) {
+      try {
+        store.setCollection('saved', intent.saveId, true);
+        message = 'Recipe saved to your cookbook.';
+      } catch (error) { message = error.message; }
+    }
+    const destination = person.role === 'admin' ? 'admin'
+      : intent?.page === 'admin' ? 'discover' : intent?.page || 'discover';
+    rememberIntent(null);
+    go(destination);
+    refresh();
+    notify(message);
+  };
   useEffect(()=>{
-    const onRoute=()=>{setRoute(getRoute());window.scrollTo(0,0);};
+    const onRoute=()=>{setRoute(getRoute());window.scrollTo(0,0);document.getElementById('main-content')?.focus({preventScroll:true});};
     const onStorage=()=>refresh();
     window.addEventListener('hashchange',onRoute);window.addEventListener('storage',onStorage);
     window.addEventListener('supperclub:session-expired',onStorage);
     return ()=>{window.removeEventListener('hashchange',onRoute);window.removeEventListener('storage',onStorage);window.removeEventListener('supperclub:session-expired',onStorage);clearTimeout(timer.current);};
   },[]);
   useEffect(()=>{
-    if(denied){setReturnTo(route);location.replace('#login');}
+    if(denied){rememberIntent(path);location.replace('#login');}
     else if(unauthorised){notify('Administrator access is required.');location.replace('#discover');}
-    else if(user && ['login','signup'].includes(page)){location.replace('#'+(user.role==='admin'?'admin':returnTo||'discover'));}
-    else if(user && returnTo && !['login','signup'].includes(page)){setReturnTo(null);}
-  },[denied,unauthorised,page,user?.id,returnTo,route]);
-  const props={mode:page,go,notify,user,refresh,openRecipe,returnTo};
+    else if(user && ['login','signup'].includes(page) && ['login','signup'].includes(getRoute())){location.replace('#'+(user.role==='admin'?'admin':'discover'));}
+    else if(!['login','signup'].includes(page)){rememberIntent(null);}
+  },[denied,unauthorised,page,user?.id,route,path]);
+  const props={mode:page,go,notify,user,refresh,openRecipe,completeLogin};
   let content, title='Discover recipes';
   if(denied || unauthorised){content=<main className="page-width waiting-page">Opening your kitchen…</main>;}
   else if(page==='discover'){content=<Discover {...{recipes,openRecipe,toggleSave,discoverState,setDiscoverState}}/>;}
@@ -87,20 +103,20 @@ function App() {
     let recipe=recipes.find(r=>r.id===recipeId && r.status==='approved');
     if(!recipe && token){try{const snapshot=store.readShare(token);if(snapshot.id===recipeId)recipe=snapshot;}catch{/* Incomplete shares use the unavailable view. */}}
     title=recipe?.title||'Recipe unavailable';
-    content=recipe?<RecipeDetail key={recipe.id} {...{recipe,token,go,toggleSave,notify,user,requireLogin,refresh}}/>:<NotFound go={go} message="This recipe is unavailable."/>;
+    content=recipe?<RecipeDetail key={(user?.id || 'guest') + '/' + recipe.id + '/' + (recipe.revision || 0)} {...{recipe,token,go,toggleSave,notify,user,requireLogin,refresh}}/>:<NotFound go={go} message="This recipe is unavailable."/>;
   }
   else if(['login','signup'].includes(page)){title=page==='login'?'Sign in':'Join Supperclub';content=<AuthPage key={page} {...props}/>;}
-  else if(page==='collections'){title='My cookbook';content=<CollectionsPage {...props}/>;}
+  else if(page==='collections'){title='My cookbook';content=<CollectionsPage key={user.id} {...props}/>;}
   else if(page==='planner'){title='Meal planner';content=<MealPlanner key={user.id} {...props}/>;}
-  else if(page==='submit'){title='Submit a recipe';content=<SubmitPage {...props}/>;}
-  else if(page==='submissions'){title='My submissions';content=<SubmissionsPage {...props}/>;}
-  else if(page==='admin'){title='Admin dashboard';content=<AdminPage {...props}/>;}
+  else if(page==='submit'){title=idPart?'Revise recipe':'Submit a recipe';content=<SubmitPage key={user.id+'/'+idPart} editId={safeDecode(idPart)} {...props}/>;}
+  else if(page==='submissions'){title='My submissions';content=<SubmissionsPage key={user.id} {...props}/>;}
+  else if(page==='admin'){title='Admin dashboard';content=<AdminPage key={user.id} {...props}/>;}
   else {title='Page unavailable';content=<NotFound go={go}/>;}
   useEffect(()=>{document.title=title+' · Supperclub';},[title]);
   return <><a className="skip-link" href="#main-content" onClick={e=>{e.preventDefault();document.getElementById('main-content')?.focus();}}>Skip to content</a>
-    <Header {...{user,go,route:page}} onLogout={()=>{try{store.logout();setReturnTo(null);go('discover');refresh();notify('You have signed out.');}catch(error){notify(error.message);}}}/>
+    <Header {...{user,go,route:page}} onLogout={()=>{try{store.logout();rememberIntent(null);go('discover');refresh();notify('You have signed out.');}catch(error){notify(error.message);}}}/>
     <div className="main-content" id="main-content" tabIndex="-1">{content}</div>
-    <footer className="site-footer"><div className="page-width"><Brand/><a href="#discover">Explore recipes</a><a href="#collections">My cookbook</a></div></footer>
+    <footer className="site-footer"><div className="page-width"><Brand/><a href="#discover">Explore recipes</a><a href="#collections">My cookbook</a><MotionPreference/></div></footer>
     <div className={'toast'+(notice?' shown':'')} role="status" aria-live="polite">{notice}</div>
   </>;
 }

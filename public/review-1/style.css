@@ -790,3 +790,7 @@ footer {
     transition:none!important;
   }
 }
+.review-actions { display:grid; gap:.8rem; justify-items:start; max-width:35rem; }
+.review-feedback { width:100%; margin-top:.4rem; }
+.review-note { margin:1rem 0; padding:.8rem 1rem; border-inline-start:3px solid #ad7246; background:#f7efe4; color:#483c2c; }
+.review-note p,.review-actions p { overflow-wrap:anywhere; }

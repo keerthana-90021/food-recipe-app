@@ -26,7 +26,7 @@ function Gate({ admin = false, user, go }) {
   </div></section>;
 }
 
-export function AuthPage({ mode, go, notify, refresh, returnTo }) {
+export function AuthPage({ mode, go, completeLogin }) {
   const signup = mode === 'signup';
   const [receipt] = useState(() => signup ? null : kitchen().recentSignup());
   const [name,setName] = useState('');
@@ -59,9 +59,7 @@ export function AuthPage({ mode, go, notify, refresh, returnTo }) {
         return;
       }
       const user = await kitchen().login(email.trim(), password);
-      refresh();
-      notify('Signed in as ' + user.name + '.');
-      go(user.role === 'admin' ? 'admin' : (returnTo || 'discover').replace(/^#\/?/, ''));
+      completeLogin(user);
     } catch (failure) {
       setError(failure.message);
     } finally {
@@ -177,47 +175,52 @@ export function CollectionsPage({user, go, notify, refresh, openRecipe}) {
 }
 
 const lines = text => text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
-const diets = ['Vegetarian','Vegan','Gluten-free','Dairy-free'];
-export function SubmitPage({user, go, notify, refresh}) {
-  const [diet,setDiet] = useState([]);
+const diets = ['Vegetarian','Vegan','Non-vegetarian','Contains egg','Gluten-free','Dairy-free'];
+export function SubmitPage({user, go, notify, refresh, editId = ''}) {
+  const [original] = useState(() => editId ? kitchen().recipes().find(r => r.id === editId && r.authorId === user?.id && r.status === 'rejected') : null);
+  const [diet,setDiet] = useState(original?.diet || []);
   const [error,setError] = useState('');
   if (!user) return <Gate go={go}/>;
+  if (editId && !original) return <section className="ac-page ac-empty"><h1>Revision unavailable</h1><button className="ac-button" onClick={() => go('submissions')}>My submissions</button></section>;
   function submit(event) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     try {
-      kitchen().submitRecipe({
+      const fields = {
         title: form.get('title').trim(), description: form.get('description').trim(), cuisine: form.get('cuisine').trim(),
         diet, time: Number(form.get('time')), servings: Number(form.get('servings')),
         ingredients: lines(form.get('ingredients')), steps: lines(form.get('steps'))
-      });
+      };
+      if (original) kitchen().resubmitRecipe(original.id, fields, original.revision || 0);
+      else kitchen().submitRecipe(fields);
       refresh();
-      notify('Recipe submitted for review.');
+      notify(original ? 'Revision sent for review.' : 'Recipe submitted for review.');
       go('submissions');
     } catch (failure) { setError(failure.message); }
   }
   return <section className="ac-page ac-writing">
-    <PageHeading title="Share a recipe" action={<button className="ac-button ac-outline" onClick={() => go('submissions')}>My submissions</button>}>
-      Write down how you make it. An admin will review your recipe before it appears in Discover.
+    <PageHeading title={original ? 'Revise your recipe' : 'Share a recipe'} action={<button className="ac-button ac-outline" onClick={() => go('submissions')}>My submissions</button>}>
+      {original ? 'Update the recipe and send it back to the kitchen for review.' : 'Write down how you make it. An admin will review your recipe before it appears in Discover.'}
     </PageHeading>
     <form className="ac-form ac-recipe-form" onSubmit={submit}>
+      {original?.reviewNote && <p className="ac-review-note"><strong>Reviewer feedback</strong>{original.reviewNote}</p>}
       <fieldset><legend>Recipe details</legend>
-        <label>Recipe name<input name="title" required maxLength={100} placeholder="e.g. Sunday tomato rasam"/></label>
-        <label>Description <small>(optional)</small><textarea name="description" maxLength={600} rows={2} placeholder="What makes this dish special?"/></label>
+        <label>Recipe name<input name="title" defaultValue={original?.title} required maxLength={100} placeholder="e.g. Sunday tomato rasam"/></label>
+        <label>Description <small>(optional)</small><textarea name="description" defaultValue={original?.description} maxLength={600} rows={2} placeholder="What makes this dish special?"/></label>
         <div className="ac-field-grid">
-          <label>Cuisine<input name="cuisine" required maxLength={60} placeholder="e.g. South Indian" list="ac-cuisines"/></label>
+          <label>Cuisine<input name="cuisine" defaultValue={original?.cuisine} required maxLength={60} placeholder="e.g. South Indian" list="ac-cuisines"/></label>
           <datalist id="ac-cuisines">{[...new Set(approvedRecipes().map(r => r.cuisine))].map(cuisine => <option key={cuisine} value={cuisine}/>)}</datalist>
-          <label>Total time (minutes)<input name="time" required type="number" min="1" max="1440" placeholder="35"/></label>
-          <label>Servings<input name="servings" required type="number" min="1" max="50" placeholder="4"/></label>
+          <label>Total time (minutes)<input name="time" defaultValue={original?.time} required type="number" min="1" max="1440" placeholder="35"/></label>
+          <label>Servings<input name="servings" defaultValue={original?.servings} required type="number" min="1" max="50" placeholder="4"/></label>
         </div>
-        <div className="ac-diets"><p>Dietary preferences <small>(optional)</small></p><div>{diets.map(item => <label key={item}><input type="checkbox" checked={diet.includes(item)} onChange={e => setDiet(e.target.checked ? [...diet,item] : diet.filter(d => d !== item))}/>{item}</label>)}</div></div>
+        <div className="ac-diets"><p>Dietary preferences <small>(optional)</small></p><div>{[...new Set([...diets, ...(original?.diet || [])])].map(item => <label key={item}><input type="checkbox" checked={diet.includes(item)} onChange={e => setDiet(e.target.checked ? [...diet,item] : diet.filter(d => d !== item))}/>{item}</label>)}</div></div>
       </fieldset>
       <fieldset><legend>Ingredients & method</legend>
-        <label>Ingredients<small>List one ingredient per line, including its quantity.</small><textarea name="ingredients" required rows={5} placeholder={'2 tbsp olive oil\n1 small onion, finely chopped'}/></label>
-        <label>Preparation steps<small>Write one step per line, in cooking order.</small><textarea name="steps" required rows={6} placeholder="Heat the oil in a pan over medium heat."/></label>
+        <label>Ingredients<small>List one ingredient per line, including its quantity.</small><textarea name="ingredients" defaultValue={original?.ingredients.join('\n')} required rows={5} placeholder={'2 tbsp olive oil\n1 small onion, finely chopped'}/></label>
+        <label>Preparation steps<small>Write one step per line, in cooking order.</small><textarea name="steps" defaultValue={original?.steps.join('\n')} required rows={6} placeholder="Heat the oil in a pan over medium heat."/></label>
       </fieldset>
       <ErrorMessage message={error}/>
-      <div className="ac-form-footer"><button className="ac-button">Submit for review</button></div>
+      <div className="ac-form-footer"><button className="ac-button">{original ? 'Resubmit for review' : 'Submit for review'}</button></div>
     </form>
   </section>;
 }
@@ -244,6 +247,7 @@ export function SubmissionsPage({user,go,openRecipe}) {
       : <div className="ac-review-list">{mine.map(r => <details className="ac-review" key={r.id}>
         <summary><span><strong>{r.title}</strong><small>{r.cuisine} · {r.time} min</small></span><Status status={r.status}/></summary>
         <RecipePreview recipe={r}/>{r.status === 'approved' && <button className="ac-button ac-outline" onClick={() => openRecipe(r.id)}>Open published recipe</button>}
+        {r.status === 'rejected' && <>{r.reviewNote && <p className="ac-review-note"><strong>Reviewer feedback</strong>{r.reviewNote}</p>}<button className="ac-button" onClick={() => go('submit/'+r.id)}>Revise recipe</button></>}
       </details>)}</div>}
   </section>;
 }
@@ -255,9 +259,9 @@ export function AdminPage({user,go,notify,refresh,openRecipe}) {
   const submissions = kitchen().recipes().filter(r => r.authorId && r.authorId !== 'editorial' && !window.KitchenSeeds?.some(seed => seed.id === r.id));
   const statuses = ['pending','approved','rejected'];
   const rows = submissions.filter(r => r.status === tab).reverse();
-  function review(id,status) {
+  function review(recipe,status,note='') {
     try {
-      kitchen().moderate(id,status);
+      kitchen().moderate(recipe.id,status,note,recipe.revision || 0);
       refresh(); setError('');
       notify(status === 'approved' ? 'Recipe published to Discover.' : 'Recipe declined.');
     } catch (failure) {setError(failure.message);}
@@ -270,8 +274,13 @@ export function AdminPage({user,go,notify,refresh,openRecipe}) {
        : <div className="ac-review-list">{rows.map(r => <details className="ac-review" key={r.id}>
          <summary><span><strong>{r.title}</strong><small>Submitted by {r.author}</small></span><Status status={r.status}/></summary>
          <RecipePreview recipe={r}/>
-         {tab === 'pending' && <div className="ac-actions"><button className="ac-button" onClick={() => review(r.id,'approved')}>Approve & publish</button><button className="ac-button ac-outline" onClick={() => review(r.id,'rejected')}>Decline recipe</button></div>}
+         {r.reviewNote && <p className="ac-review-note"><strong>Reviewer feedback</strong>{r.reviewNote}</p>}
+         {tab !== 'approved' && <button className="ac-button" onClick={() => review(r,'approved')}>{tab === 'pending' ? 'Approve & publish' : 'Approve on reconsideration'}</button>}
          {tab === 'approved' && <button className="ac-button ac-outline" onClick={() => openRecipe(r.id)}>Open published recipe</button>}
+         {tab !== 'rejected' && <form className="ac-form ac-feedback-form" onSubmit={e => {e.preventDefault(); review(r,'rejected',new FormData(e.currentTarget).get('note'));}}>
+           <label>Feedback for the cook<textarea name="note" rows={2} maxLength={400} required placeholder="What should the cook change?"/></label>
+           <button className="ac-button ac-outline">{tab === 'approved' ? 'Unpublish and request changes' : 'Decline recipe'}</button>
+         </form>}
        </details>)}</div>}
   </section>;
 }

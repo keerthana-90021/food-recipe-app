@@ -141,3 +141,6 @@
   .ac-review { padding-inline: .8rem; }
   .ac-tabs button { padding: .55rem .65rem; }
 }
+.ac-review-note { display:grid; gap:.25rem; margin:1rem 0; padding:.8rem 1rem; border-inline-start:3px solid #bd713c; background:#f7efe3; color:#463725; overflow-wrap:anywhere; }
+.ac-feedback-form { display:grid; gap:.65rem; margin-top:1.25rem; max-width:42rem; justify-items:start; }
+.ac-feedback-form label { width:100%; }

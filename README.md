@@ -22,11 +22,13 @@ To check a production build locally, run `npm run build`, then `npm run preview`
 
 ## Modules
 
+The [review checklist and demo questions](docs/REVIEW.md) map both editions to the course requirements. Run `npm test` to check the catalogue, account isolation, ratings and moderation before the demonstration.
+
 | Role | What the reviewer can do |
 | --- | --- |
 | Guest | Browse the catalogue, search by ingredient, filter by cuisine or dietary preference, and follow a recipe one step at a time in Cook mode in the React edition. |
-| User | Save dishes, organize collections, rate or share a recipe, and submit a dish for review. The React edition also lets a user plan breakfast, lunch, and dinner by date and check off the week's shopping list. |
-| Admin | Sign in to the administration area, inspect submissions, and approve or decline them. Approval makes the recipe visible in this browser's catalogue. |
+| User | Save dishes, organize collections, rate or share a recipe, and revise a declined submission. In the React edition, plan meals by date, check off groceries, and resume cooking steps or a kitchen timer after a refresh. |
+| Admin | Review a submission, publish it, or send it back to the author with feedback. An author can correct the same recipe and return it to the queue. |
 
 Choose **Create an account** and confirm a passphrase of at least 15 characters. After the account confirmation, sign in using the prefilled email and your passphrase. Existing accounts can use their original password.
 
@@ -60,6 +62,8 @@ For a quick submission, try **Cumin potatoes**. Choose Indian cuisine, set 15 mi
 | 1 tsp oil | Add the potatoes and salt. Stir occasionally until the edges turn golden. |
 | ½ tsp cumin seeds | Serve warm. |
 | Salt to taste | |
+
+For a second discovery example, select **Non-vegetarian** and choose **Korean** from the cuisine dropdown. Use **Surprise me** to pick from the current results. The footer has a motion preference for the animated controls.
 
 ## GitHub and Vercel
 

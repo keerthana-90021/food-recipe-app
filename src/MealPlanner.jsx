@@ -1,6 +1,6 @@
 import React, {useRef, useState} from 'react';
 import {Icon} from './Icons.jsx';
-import {addToPlan, dayDate, isBought, localDay, markBought, plannedMeals, removeFromPlan, shiftDay, shoppingItems, slots, weekStart} from './mealStore.js';
+import {addToPlan, dayDate, localDay, markBought, plannedMeals, quantityLabel, removeFromPlan, shiftDay, shoppingItems, slots, stillNeeded, weekStart} from './mealStore.js';
 import './planner.css';
 
 const fullDate = new Intl.DateTimeFormat(undefined, {weekday:'long', month:'long', day:'numeric'});
@@ -41,28 +41,29 @@ export function PlanRecipeButton({recipe, user, requireLogin, notify}) {
 }
 
 function ShoppingList({start, items, notify, refresh}) {
-  const [copyText, setCopyText] = useState('');
-  const statuses = items.map(item => ({item, bought:isBought(start, item)}));
-  const remaining = statuses.filter(entry => !entry.bought);
+  const [showCopy, setShowCopy] = useState(false);
+  const statuses = items.map(item => ({item, needed:stillNeeded(start,item)}));
+  const remaining = statuses.filter(entry => entry.needed > 0);
+  const copyText = ['Shopping list for the week of '+shortDate.format(dayDate(start)), ...remaining.map(({item,needed}) => '- '+quantityLabel(item,needed))].join('\n');
 
   function toggle(item, checked) {
-    try { markBought(start, item, checked); setCopyText(''); refresh(); }
+    try { markBought(start, item, checked); refresh(); }
     catch (error) { notify(error.message); }
   }
   async function copy() {
-    const text = ['Shopping list · '+shortDate.format(dayDate(start)), ...remaining.map(({item}) => '• '+item.label)].join('\n');
-    try { await navigator.clipboard.writeText(text); notify('Shopping list copied.'); }
-    catch { setCopyText(text); }
+    try { await navigator.clipboard.writeText(copyText); setShowCopy(false); notify('Shopping list copied.'); }
+    catch { setShowCopy(true); }
   }
   return <aside className="mp-shopping" aria-labelledby="mp-shopping-title">
     <h2 id="mp-shopping-title">Shopping list</h2>
     {items.length ? <>
       <p className="mp-small">{remaining.length} of {items.length} ingredients left to pick up</p>
-      <ul className="mp-groceries">{statuses.map(({item, bought}) => <li key={item.id}>
-        <label className={bought?'is-bought':''}><input type="checkbox" checked={bought} onChange={event => toggle(item,event.target.checked)}/><span>{item.label}</span></label>
+      <ul className="mp-groceries">{statuses.map(({item, needed}) => <li key={item.id}>
+        <label className={needed===0?'is-bought':''}><input type="checkbox" checked={needed===0} onChange={event => toggle(item,event.target.checked)}/><span>{item.label}
+          {needed > 0 && needed < item.amount && <small className="mp-still-needed">{quantityLabel(item,needed)} still to buy</small>}</span></label>
       </li>)}</ul>
       <button className="outline-button button mp-copy" disabled={!remaining.length} onClick={copy}><Icon name="share" size={16}/>Copy remaining items</button>
-      {copyText && <label className="mp-field mp-copy-text">Select and copy your list<textarea rows={4} value={copyText} readOnly onFocus={event=>event.target.select()}/></label>}
+      {showCopy && remaining.length > 0 && <label className="mp-field mp-copy-text">Select and copy your list<textarea rows={4} value={copyText} readOnly onFocus={event=>event.target.select()}/></label>}
     </> : <p className="mp-empty-shopping">Add a recipe to this week to see the ingredients you’ll need.</p>}
   </aside>;
 }

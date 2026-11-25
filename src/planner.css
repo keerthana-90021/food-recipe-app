@@ -43,6 +43,7 @@
 .mp-groceries .is-bought span { text-decoration:line-through; color:var(--muted) }
 .mp-copy:disabled { opacity:.5 }
 .mp-copy-text { margin-top:12px }
+.mp-still-needed { display:block; margin-top:.15rem; color:var(--green); font-size:.85rem; font-weight:600; }
 .mp-quick.is-open { flex:1 0 100% }
 .mp-quick-fields { display:flex; gap:8px; flex-wrap:wrap; align-items:end; margin-top:10px }
 .mp-quick-fields label { flex:1 1 115px }

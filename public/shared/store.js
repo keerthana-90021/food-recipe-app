@@ -8,6 +8,7 @@
   const passwordAlgorithm = 'PBKDF2-SHA256';
   const passwordIterations = 600000;
   const legacyIterations = 100000;
+  const standardDiets = ['Vegetarian','Vegan','Non-vegetarian','Contains egg','Gluten-free','Dairy-free'];
   const sessionDuration = 8 * 60 * 60 * 1000;
   let expiryTimer;
   let scheduledExpiry = 0;
@@ -28,7 +29,8 @@
       const value = localStorage.getItem(storageKey);
       return value === null ? fallback : JSON.parse(value);
     } catch {
-      throw new Error('Browser storage is unavailable or damaged. Try opening the app in another browser profile.');
+      // A damaged record or disabled local storage must not hide the public recipe book.
+      return fallback;
     }
   }
 
@@ -43,10 +45,12 @@
 
   function entries(start) {
     const items = [];
-    for (let index = 0; index < localStorage.length; index += 1) {
-      const item = localStorage.key(index);
-      if (item && item.startsWith(start)) items.push(read(item));
-    }
+    try {
+      for (let index = 0; index < localStorage.length; index += 1) {
+        const item = localStorage.key(index);
+        if (item && item.startsWith(start)) items.push(read(item));
+      }
+    } catch { return items.filter(item => item !== null); }
     return items.filter(item => item !== null);
   }
 
@@ -66,7 +70,7 @@
   }
 
   function publicUser(person) {
-    if (!person) return null;
+    if (!person || typeof person.id !== 'string' || typeof person.email !== 'string' || typeof person.name !== 'string' || !person.name.trim()) return null;
     const { id, name, email } = person;
     return { id, name, email, role: person === admin ? 'admin' : 'user' };
   }
@@ -169,7 +173,8 @@
     const legacy = person && person.passwordVersion === undefined;
     const knownVersion = person?.passwordVersion === passwordVersion &&
       person.passwordAlgorithm === passwordAlgorithm && person.passwordIterations === passwordIterations;
-    if (!person || typeof password !== 'string' || password.length > 128 ||
+    if (!publicUser(person) || typeof password !== 'string' || password.length > 128 ||
+        typeof person.salt !== 'string' || !/^[\da-f]{32}$/i.test(person.salt) ||
         (!legacy && !knownVersion) ||
         await passwordHash(password, person.salt, legacy ? legacyIterations : passwordIterations) !== person.hash) {
       throw new Error('The email or password is incorrect.');
@@ -192,7 +197,7 @@
 
   function users() {
     requireAdmin();
-    return [admin, ...entries(key('accounts') + '/')].map(publicUser);
+    return [admin, ...entries(key('accounts') + '/')].map(publicUser).filter(Boolean);
   }
 
   function allRecipes() {
@@ -200,7 +205,13 @@
       author: 'Supperclub Kitchen', authorId: 'kitchen', ...seed,
       status: read(key('seed-status', seed.id), 'approved')
     }));
-    return [...seeds, ...entries(key('recipes') + '/')];
+    const community = entries(key('recipes') + '/').filter(dish =>
+      typeof dish.id === 'string' && typeof dish.title === 'string' && typeof dish.authorId === 'string' &&
+      typeof dish.author === 'string' && typeof dish.cuisine === 'string' &&
+      ['approved','pending','rejected'].includes(dish.status) && Number.isInteger(dish.time) && Number.isInteger(dish.servings) &&
+      [dish.ingredients, dish.steps, dish.diet].every(list => Array.isArray(list) && list.every(item => typeof item === 'string'))
+    );
+    return [...seeds, ...community.map(dish => ({...dish, diet: dietaryLabels(dish.diet, false)}))];
   }
 
   function recipes() {
@@ -233,12 +244,22 @@
     return cleaned;
   }
 
+  function dietaryLabels(values, validate) {
+    const keyFor = label => label.toLowerCase().replace(/[\s_-]+/g,'');
+    const labels = [...new Set(values.map(label => standardDiets.find(known => keyFor(known) === keyFor(label)) || label.trim()))];
+    const excluded = new Set();
+    if (labels.includes('Non-vegetarian')) { excluded.add('Vegetarian'); excluded.add('Vegan'); }
+    if (labels.includes('Contains egg')) excluded.add('Vegan');
+    if (validate && labels.some(label => excluded.has(label))) throw new Error('Review the dietary labels. The selected preferences are incompatible.');
+    return labels.filter(label => !excluded.has(label));
+  }
+
   function recipeFields(input) {
     return {
       title: text(input.title, 'a recipe title', 100),
       description: text(input.description, 'the description', 600, false),
       cuisine: text(input.cuisine, 'the cuisine', 60),
-      diet: [...new Set(lines(input.diet, 'dietary labels', 8, 40, 0))],
+      diet: dietaryLabels(lines(input.diet, 'dietary labels', 8, 40, 0), true),
       time: whole(input.time, 'cooking time in minutes', 1440),
       servings: whole(input.servings, 'servings', 50),
       ingredients: lines(input.ingredients, 'ingredients', 50, 200),
@@ -256,24 +277,40 @@
     return dish;
   }
 
-  function moderate(recipeId, status) {
+  function moderate(recipeId, status, note = '', expectedRevision) {
     requireAdmin();
     if (status !== 'approved' && status !== 'rejected') throw new Error('Choose approve or reject.');
     const storageKey = key('recipes', recipeId);
     const dish = read(storageKey);
-    if (dish) {
-      const updated = { ...dish, status };
-      write(storageKey, updated);
-      return updated;
+    if (!dish) throw new Error('This submission could not be found.');
+    const revision = dish.revision || 0;
+    if ((expectedRevision !== undefined && revision !== expectedRevision) || dish.status === status) {
+      throw new Error('This submission has already changed. Reopen it to see the latest review.');
     }
-    const seed = (window.KitchenSeeds || []).find(recipe => recipe.id === recipeId);
-    if (!seed) throw new Error('This recipe could not be found.');
-    write(key('seed-status', recipeId), status);
-    return { ...seed, status };
+    const reviewNote = status === 'rejected' ? text(note, 'feedback explaining what the cook should change', 400) : '';
+    const updated = { ...dish, status, reviewNote, revision: revision + 1, reviewedAt: new Date().toISOString() };
+    write(storageKey, updated);
+    return updated;
+  }
+
+  function resubmitRecipe(recipeId, input, expectedRevision) {
+    const author = requireUser();
+    const storageKey = key('recipes', recipeId);
+    const dish = read(storageKey);
+    if (!dish || dish.authorId !== author.id || dish.status !== 'rejected') {
+      throw new Error('Only the author can revise a declined recipe.');
+    }
+    const revision = dish.revision || 0;
+    if (expectedRevision !== undefined && expectedRevision !== revision) throw new Error('A newer revision is available. Reopen this recipe before editing.');
+    const updated = { ...dish, ...recipeFields(input), status: 'pending', revision: revision + 1, updatedAt: new Date().toISOString() };
+    write(storageKey, updated);
+    return updated;
   }
 
   function collectionList(person) {
-    return [{ id: 'saved', name: 'Saved recipes' }, ...entries(key('collections', person.id) + '/')];
+    return [{ id: 'saved', name: 'Saved recipes' }, ...entries(key('collections', person.id) + '/').filter(
+      group => typeof group.id === 'string' && typeof group.name === 'string'
+    )];
   }
 
   function collections() {
@@ -320,7 +357,7 @@
     const seed = (window.KitchenSeeds || []).find(item => item.id === recipeId);
     const baseCount = Number(seed?.ratingCount ?? seed?.baseCount) || 0;
     const baseRating = Number(seed?.ratingAverage ?? seed?.baseRating ?? seed?.rating) || 0;
-    const votes = entries(key('ratings', recipeId) + '/');
+    const votes = entries(key('ratings', recipeId) + '/').filter(vote => Number.isInteger(vote) && vote >= 1 && vote <= 5);
     const count = baseCount + votes.length;
     const total = votes.reduce((sum, score) => sum + score, baseCount * baseRating);
     return {
@@ -354,6 +391,11 @@
       const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
       const raw = JSON.parse(new TextDecoder().decode(bytes));
       if (!/^dish-[\da-f]{32}$/.test(raw.id)) throw Error();
+      const local = read(key('recipes', raw.id));
+      if (local) {
+        if (local.status !== 'approved') throw Error();
+        return approvedRecipe(raw.id);
+      }
       return {
         ...recipeFields(raw), id: raw.id, author: text(raw.author, 'the author name', 80),
         authorId: '', status: 'shared', image: ''
@@ -364,7 +406,7 @@
   }
 
   window.KitchenStore = Object.freeze({
-    currentUser, signup, recentSignup, passwordMinLength, login, logout, users, recipes, submitRecipe, moderate,
+    currentUser, signup, recentSignup, passwordMinLength, login, logout, users, recipes, submitRecipe, resubmitRecipe, moderate,
     collections, createCollection, setCollection, isSaved, save, rating, rate, shareToken, readShare
   });
 })();

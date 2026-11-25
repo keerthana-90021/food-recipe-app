@@ -3,17 +3,22 @@ import {FoodImage} from './Discover.jsx';
 import {Icon} from './Icons.jsx';
 import {PlanRecipeButton} from './MealPlanner.jsx';
 import CookMode from './CookMode.jsx';
+import {useCookSession} from './cookSession.js';
 
-export default function RecipeDetail({recipe,token,go,toggleSave,notify,user,requireLogin,refresh}) {
+export default function RecipeDetail(props) {
+  const {recipe,user} = props;
+  const scope = JSON.stringify([user?.id,recipe.id,recipe.status,recipe.ingredients,recipe.steps]);
+  return <RecipeView key={scope} {...props}/>;
+}
+function RecipeView({recipe,token,toggleSave,notify,user,requireLogin,refresh}) {
   const store = window.KitchenStore;
-  const [checked,setChecked] = useState([]);
-  const [done,setDone] = useState([]);
+  const progress = useCookSession(recipe,user,notify);
+  const {checked,done} = progress;
   const [shareUrl,setShareUrl] = useState('');
   const [shareText,setShareText] = useState('');
   const snapshot = recipe.status==='shared';
   const saved = !snapshot && store.isSaved(recipe.id);
   const score = snapshot ? null : store.rating(recipe.id);
-  const flip = (setter,index) => setter(values=>values.includes(index)?values.filter(n=>n!==index):[...values,index]);
   function rate(stars) {
     if(!user){requireLogin();return;}
     try {store.rate(recipe.id,stars);refresh();notify('Your rating has been saved.');} catch(error){notify(error.message);}
@@ -26,7 +31,7 @@ export default function RecipeDetail({recipe,token,go,toggleSave,notify,user,req
         try{await navigator.clipboard.writeText(text);notify('Recipe copied for sharing.');}catch{notify('Select and copy the recipe below.');}
         return;
       }
-      const snapshotToken = token || store.shareToken(recipe.id);
+      const snapshotToken = snapshot ? token : store.shareToken(recipe.id);
       const url=new URL(window.location.href);
       url.hash='recipe/'+encodeURIComponent(recipe.id)+(snapshotToken?'?shared='+snapshotToken:'');
       setShareUrl(url.href);
@@ -61,10 +66,11 @@ export default function RecipeDetail({recipe,token,go,toggleSave,notify,user,req
     </div>
     <div className="method-grid">
       <section className="ingredients-panel"><h2>Ingredients</h2><p className="section-hint">For {recipe.servings} {recipe.servings===1?'serving':'servings'}</p>
-        <ul>{recipe.ingredients.map((ingredient,i)=><li key={i}><label className={checked.includes(i)?'is-checked':''}><input type="checkbox" checked={checked.includes(i)} onChange={()=>flip(setChecked,i)}/><span>{ingredient}</span></label></li>)}</ul>
+        <ul>{recipe.ingredients.map((ingredient,i)=><li key={i}><label className={checked.includes(i)?'is-checked':''}><input type="checkbox" checked={checked.includes(i)} onChange={()=>progress.toggleIngredient(i)}/><span>{ingredient}</span></label></li>)}</ul>
       </section>
-      <section className="method-panel"><div className="method-heading"><h2>Step by step</h2><CookMode {...{recipe,done,setDone,notify}}/></div>
-        <ol>{recipe.steps.map((step,i)=><li key={i}><button className={'step-number'+(done.includes(i)?' complete':'')} onClick={()=>flip(setDone,i)} aria-label={'Mark step '+(i+1)+(done.includes(i)?' incomplete':' complete')} aria-pressed={done.includes(i)}>{done.includes(i)?<Icon name="check" size={17}/>:i+1}</button><p>{step}</p></li>)}</ol>
+      <section className="method-panel"><div className="method-heading"><h2>Step by step</h2><CookMode {...{recipe,progress,notify}}/></div>
+        <ol>{recipe.steps.map((step,i)=><li key={i}><button className={'step-number'+(done.includes(i)?' complete':'')} onClick={()=>progress.toggleStep(i)} aria-label={'Mark step '+(i+1)+(done.includes(i)?' incomplete':' complete')} aria-pressed={done.includes(i)}>{done.includes(i)?<Icon name="check" size={17}/>:i+1}</button><p>{step}</p></li>)}</ol>
+        {(checked.length > 0 || done.length > 0 || progress.timer) && <div className="cook-reset"><span>{done.length} of {recipe.steps.length} steps completed</span><button type="button" onClick={()=>{progress.reset();notify('Cooking progress reset.');}}>Reset cooking session</button></div>}
         {!snapshot && <div className="rating-panel"><h3>Rate this recipe</h3><p>{score.mine?'Your rating: '+score.mine+' out of 5.':'How did it turn out?'}</p><div className="rating-stars" aria-label="Rate recipe">{[1,2,3,4,5].map(n=><button key={n} aria-label={'Rate '+n+' out of 5'} aria-pressed={score.mine===n} onClick={()=>rate(n)}><Icon name="star" size={28} fill={n<=score.mine}/></button>)}</div></div>}
       </section>
     </div>

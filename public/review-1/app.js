@@ -5,7 +5,16 @@
   const nav = document.getElementById('nav');
   const notice = document.getElementById('notice');
   const filters = { query: '', cuisine: '', diet: '' };
-  let returnTo = '';
+  const intentKey = 'supperclub.v1/classic-return';
+  let intent = null;
+  try { intent = JSON.parse(sessionStorage.getItem(intentKey)); } catch { /* Private browsing can disable storage. */ }
+  function rememberIntent(next) {
+    intent = next;
+    try {
+      if (next) sessionStorage.setItem(intentKey, JSON.stringify(next));
+      else sessionStorage.removeItem(intentKey);
+    } catch { /* An in-memory return route still works. */ }
+  }
   let noticeTimer;
 
   function html(value) {
@@ -19,7 +28,9 @@
   function route() {
     const [path, query = ''] = location.hash.slice(1).split('?');
     const [page, id = ''] = (path || 'explore').split('/');
-    return { page, id: decodeURIComponent(id), query: new URLSearchParams(query) };
+    let decoded = '';
+    try { decoded = decodeURIComponent(id); } catch { return {page:'unavailable', id:'', query:new URLSearchParams()}; }
+    return { page, id: decoded, query: new URLSearchParams(query) };
   }
   function go(path) {
     if (location.hash === '#' + path) render();
@@ -28,9 +39,9 @@
   function detailUrl(id) { return '#recipe/' + encodeURIComponent(id); }
   function approved() { return store.recipes().filter(recipe => recipe.status === 'approved'); }
   function current() { return store.currentUser(); }
-  function requireLogin() {
+  function requireLogin(saveId) {
     if (current()) return true;
-    returnTo = location.hash.slice(1) || 'explore';
+    rememberIntent({page:location.hash.slice(1) || 'explore', saveId});
     go('login');
     return false;
   }
@@ -74,10 +85,13 @@
     showResults();
   }
   function showResults() {
-    const terms = filters.query.trim().toLowerCase().split(/[\s,]+/).filter(Boolean);
+    const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[-_]/g,' ');
+    const terms = normalize(filters.query).trim().split(/[\s,]+/).filter(Boolean);
     const list = approved().filter(recipe => {
-      const searchable = [recipe.title, recipe.cuisine, ...recipe.diet, ...recipe.ingredients].join(' ').toLowerCase();
-      return (!filters.cuisine || recipe.cuisine === filters.cuisine) && (!filters.diet || recipe.diet.includes(filters.diet))
+      const searchable = normalize([recipe.title, recipe.cuisine, ...recipe.diet, ...recipe.ingredients].join(' '));
+      const labels = recipe.diet.map(normalize);
+      const diet = normalize(filters.diet);
+      return (!filters.cuisine || recipe.cuisine === filters.cuisine) && (!diet || labels.includes(diet) || (diet === 'vegetarian' && labels.includes('vegan')))
         && terms.every(term => searchable.includes(term));
     });
     document.getElementById('results').innerHTML = `<p class="count" aria-live="polite">${list.length} ${list.length === 1 ? 'recipe' : 'recipes'}</p>`
@@ -87,8 +101,10 @@
   function detail(id, token) {
     let recipe = store.recipes().find(r => r.id === id);
     if (!recipe && token) {
-      const shared = store.readShare(token);
-      if (shared.id === id) recipe = shared;
+      try {
+        const shared = store.readShare(token);
+        if (shared.id === id) recipe = shared;
+      } catch { /* An invalid or withdrawn share uses the unavailable view. */ }
     }
     if (!recipe) { main.innerHTML = back() + empty('Recipe unavailable', 'Choose a recipe from the catalogue.'); return; }
     const published = recipe.status === 'approved';
@@ -104,6 +120,7 @@
       <div class="actions">${recipe.diet.map(d => `<span class="pill">${html(d)}</span>`).join('')}
       ${published ? `<button class="button" data-action="save" data-id="${html(id)}" aria-pressed="${!!(user && store.isSaved(id))}">${user && store.isSaved(id) ? 'Saved to cookbook' : 'Save recipe'}</button>` : `<span class="status">${html(recipe.status)}</span>`}
       ${published || portable ? `<button class="button light" data-action="share" data-id="${html(id)}">Share recipe</button>` : ''}</div>
+      ${recipe.status === 'rejected' && recipe.authorId === user?.id ? `<div class="review-note"><strong>Reviewer feedback</strong><p>${html(recipe.reviewNote || 'Review your ingredients and preparation steps before resubmitting.')}</p><a class="button light" href="#submit/${encodeURIComponent(recipe.id)}">Revise recipe</a></div>` : ''}
       <div id="share-fallback"></div></div>${art(recipe, 'detail-photo')}</section>
       <div class="detail-body"><section class="panel"><h2>Ingredients</h2><ul class="ingredients">${recipe.ingredients.map(item => `<li><label class="check"><input type="checkbox"><span>${html(item)}</span></label></li>`).join('')}</ul></section>
       <section><h2>Method</h2><ol class="method">${recipe.steps.map(step => `<li>${html(step)}</li>`).join('')}</ol></section></div>
@@ -135,7 +152,9 @@
       <section class="shelf"><div class="sectionhead"><h2>My submissions</h2><a href="#submit" class="under">Submit a recipe</a></div>
       ${mine.length ? `<div class="rows">${mine.map(r => `<div class="row"><a href="${detailUrl(r.id)}">${html(r.title)}</a><span class="status ${html(r.status)}">${html(r.status)}</span></div>`).join('')}</div>` : '<p class="soft">Recipes you submit will appear here for you to track.</p>'}</section>`;
   }
-  function submitPage() {
+  function submitPage(editId) {
+    const original = editId ? store.recipes().find(r => r.id === editId && r.authorId === current().id && r.status === 'rejected') : null;
+    if (editId && !original) { main.innerHTML = back() + empty('Revision unavailable', 'Open My cookbook to find your submissions.'); return; }
     main.innerHTML = `<div class="formbox"><div class="intro">${eyebrow('Community kitchen')}<h1>Submit a recipe</h1><p>Share a dish you love. An admin reviews each recipe before it appears in Explore.</p></div>
       <form id="submit-recipe" class="formgrid panel"><label>Recipe name<input name="title" required maxlength="100"></label>
       <label>Description<textarea name="description" rows="2" maxlength="600"></textarea></label>
@@ -144,16 +163,28 @@
       <div class="double"><label>Total time (minutes)<input type="number" name="time" min="1" max="1440" required></label><label>Servings<input type="number" name="servings" min="1" max="50" required></label></div>
       <label>Ingredients<textarea name="ingredients" required rows="5" placeholder="2 cups cooked rice"></textarea><span class="tip">Include quantities and use one line per ingredient.</span></label>
       <label>Method<textarea name="steps" required rows="6" placeholder="Rinse the rice until the water runs clear."></textarea><span class="tip">Use one line per step.</span></label>
-      <p class="form-error" role="alert"></p><button class="button">Submit for review</button></form></div>`;
+      <p class="form-error" role="alert"></p><button class="button">${original ? 'Resubmit for review' : 'Submit for review'}</button></form></div>`;
+    if (original) {
+      const form = document.getElementById('submit-recipe');
+      main.querySelector('h1').textContent = 'Revise your recipe';
+      main.querySelector('.intro p:last-child').textContent = original.reviewNote ? 'Reviewer feedback: '+original.reviewNote : 'Make your changes and resubmit this recipe for review.';
+      form.dataset.editId = original.id;
+      form.dataset.revision = String(original.revision || 0);
+      for (const name of ['title','description','cuisine','time','servings']) form.elements[name].value = original[name] ?? '';
+      form.elements.diet.value = original.diet.join(', ');
+      for (const name of ['ingredients','steps']) form.elements[name].value = original[name].join('\n');
+    }
   }
   function adminPage(status) {
-    const recipes = store.recipes();
+    const recipes = store.recipes().filter(r => r.authorId !== 'kitchen');
     const group = ['pending','approved','rejected'].includes(status) ? status : 'pending';
     const list = recipes.filter(r => r.status === group);
     main.innerHTML = `<div class="intro">${eyebrow('Admin workspace')}<h1>Recipe moderation</h1><p>Review the ingredients and method of each submission before publishing it to the catalogue.</p></div>
       <nav class="tabs" aria-label="Moderation status">${['pending','approved','rejected'].map(s => `<a href="#admin/${s}" aria-current="${s === group}">${s[0].toUpperCase() + s.slice(1)} (${recipes.filter(r => r.status === s).length})</a>`).join('')}</nav>
       ${list.length ? `<div class="rows">${list.map(r => `<article class="row"><div><h3><a href="${detailUrl(r.id)}">${html(r.title)}</a></h3><p class="meta">${html(r.cuisine)} · ${html(r.author)} · ${html(r.time)} min</p>${group === 'pending' ? `<details><summary>Read submission</summary><p>${html(r.description)}</p><b>Ingredients</b><ul>${r.ingredients.map(a=>`<li>${html(a)}</li>`).join('')}</ul><b>Method</b><ol>${r.steps.map(a=>`<li>${html(a)}</li>`).join('')}</ol></details>` : ''}</div>
-      ${group === 'pending' ? `<div class="actions"><button class="button" data-action="moderate" data-id="${html(r.id)}" data-value="approved">Approve</button><button class="button light" data-action="moderate" data-id="${html(r.id)}" data-value="rejected">Reject</button></div>` : `<span class="status ${group}">${group}</span>`}</article>`).join('')}</div>`
+      <div class="review-actions">${r.reviewNote ? `<p><strong>Reviewer feedback</strong> ${html(r.reviewNote)}</p>` : ''}
+      ${group !== 'approved' ? `<button class="button" data-action="moderate" data-id="${html(r.id)}" data-revision="${Number(r.revision || 0)}" data-value="approved">${group==='pending'?'Approve':'Approve on reconsideration'}</button>` : ''}
+      ${group !== 'rejected' ? `<form class="formgrid review-feedback" data-recipe="${html(r.id)}" data-revision="${Number(r.revision || 0)}"><label>Feedback for the cook<textarea name="note" maxlength="400" rows="2" required></textarea></label><p class="form-error" role="alert"></p><button type="submit" class="button light">${group==='pending'?'Decline recipe':'Unpublish and request changes'}</button></form>` : ''}</div></article>`).join('')}</div>`
       : empty('No ' + group + ' recipes', group === 'pending' ? 'New recipe submissions will appear here for review.' : 'Recipes with this status will appear here.')} `;
   }
   function render() {
@@ -168,7 +199,7 @@
         case 'explore': catalogue(); break;
         case 'recipe': detail(id, query.get('shared')); break;
         case 'collections': cookedCollection(id); break;
-        case 'submit': submitPage(); break;
+        case 'submit': submitPage(id); break;
         case 'admin': adminPage(id); break;
         case 'login': case 'signup': auth(page === 'signup'); break;
         default: main.innerHTML = back() + empty('Page unavailable', 'Return to Explore to browse the recipe book.');
@@ -182,7 +213,8 @@
   async function share(id) {
     const url = new URL(location.href);
     const existingToken = route().query.get('shared');
-    const token = existingToken || store.shareToken(id);
+    const localRecipe = store.recipes().find(r => r.id === id);
+    const token = localRecipe ? store.shareToken(id) : existingToken;
     url.hash = detailUrl(id).slice(1) + (token ? '?shared=' + encodeURIComponent(token) : '');
     let content = url.href;
     const localFile = url.protocol === 'file:';
@@ -216,15 +248,15 @@
     try {
       switch (action) {
         case 'reset': resetFilters(); break;
-        case 'logout': store.logout(); returnTo = ''; go('explore'); say('Logged out.'); break;
+        case 'logout': store.logout(); rememberIntent(null); go('explore'); say('Logged out.'); break;
         case 'signin': requireLogin(); break;
         case 'share': await share(id); break;
         case 'save':
-          if (requireLogin()) { const saved = store.save(id); render(); say(saved ? 'Recipe saved to your cookbook.' : 'Recipe removed from Saved recipes.'); } break;
+          if (requireLogin(id)) { const saved = store.save(id); render(); say(saved ? 'Recipe saved to your cookbook.' : 'Recipe removed from Saved recipes.'); } break;
         case 'rate':
           if (requireLogin()) { store.rate(id, Number(stars)); render(); say('Your rating has been saved.'); } break;
         case 'moderate':
-          store.moderate(id, value); render(); say(value === 'approved' ? 'Recipe approved and published.' : 'Recipe rejected.'); break;
+          store.moderate(id, value, '', Number(button.dataset.revision)); render(); say('Recipe approved and published.'); break;
       }
     } catch (error) { say(error.message); }
   });
@@ -256,8 +288,15 @@
         go('login');
       } else if (form.id === 'login') {
         const user = await store.login(data.email, data.password);
-        const destination = user.role === 'admin' ? 'admin' : returnTo && !returnTo.startsWith('admin') ? returnTo : 'collections';
-        returnTo = ''; go(destination); say(`Welcome, ${user.name}.`);
+        const pending = intent;
+        rememberIntent(null);
+        const destination = user.role === 'admin' ? 'admin' : typeof pending?.page === 'string' && !pending.page.startsWith('admin') ? pending.page : 'collections';
+        let message = `Welcome, ${user.name}.`;
+        if (typeof pending?.saveId === 'string' && approved().some(r => r.id === pending.saveId)) {
+          store.setCollection('saved', pending.saveId, true);
+          message = 'Recipe saved to your cookbook.';
+        }
+        go(destination); say(message);
       } else if (form.id === 'collection') {
         const collection = store.createCollection(data.name);
         go('collections/' + encodeURIComponent(collection.id)); say('Collection created.');
@@ -265,7 +304,12 @@
         data.diet = data.diet.split(',').map(d => d.trim()).filter(Boolean);
         for (const key of ['ingredients','steps']) data[key] = data[key].split(/\r?\n/).map(line => line.trim()).filter(Boolean);
         data.time = Number(data.time); data.servings = Number(data.servings);
-        store.submitRecipe(data); go('collections'); say('Recipe submitted for admin review.');
+        if (form.dataset.editId) store.resubmitRecipe(form.dataset.editId, data, Number(form.dataset.revision));
+        else store.submitRecipe(data);
+        go('collections'); say('Recipe submitted for admin review.');
+      } else if (form.matches('.review-feedback')) {
+        store.moderate(form.dataset.recipe,'rejected',data.note,Number(form.dataset.revision));
+        render(); say('Recipe returned to its author with feedback.');
       }
     } catch (error) { errorBox.textContent = error.message; }
     finally { submit.disabled = false; }

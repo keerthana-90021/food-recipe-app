@@ -246,12 +246,11 @@ window.KitchenSeeds = [
   },
   {
     "id": "blueberry-pancakes",
+    "protein": "Egg",
     "title": "Fluffy Blueberry Pancakes",
     "description": "Golden, tender pancakes with pockets of warm blueberries. A little maple syrup finishes the stack.",
     "cuisine": "American",
-    "diet": [
-      "Vegetarian"
-    ],
+    "diet": ["Vegetarian", "Contains egg"],
     "time": 25,
     "servings": 3,
     "ingredients": [
@@ -280,6 +279,7 @@ window.KitchenSeeds = [
   },
   {
     "id": "ginger-chicken",
+    "protein": "Chicken",
     "title": "Ginger Chicken Curry",
     "description": "Seared chicken simmers in a rich tomato and onion gravy with fresh ginger, toasted spices and coriander.",
     "cuisine": "Indian",
@@ -429,7 +429,7 @@ window.KitchenSeeds.push(...[
     description: 'Soft potato gnocchi and fresh basil pesto need only a splash of cooking water to come together.',
     diet: ['Vegetarian'], category: 'Dinner', time: 20, servings: 2, image: 'pesto-gnocchi.webp',
     ingredients: [
-      '350 g vegetarian potato gnocchi', '30 g fresh basil leaves', '20 g pine nuts',
+      '350 g egg-free potato gnocchi', '30 g fresh basil leaves', '20 g pine nuts',
       '1 small garlic clove', '30 g grated vegetarian hard cheese', '3 tbsp extra virgin olive oil',
       '1 tsp lemon juice', '1 tsp salt for cooking water'
     ],
@@ -542,7 +542,7 @@ window.KitchenSeeds.push(...[
     diet: ['Vegetarian'], category: 'Side', time: 20, servings: 3, image: 'esquites.webp',
     ingredients: [
       '350 g sweetcorn kernels, thawed and dried if frozen', '1 tbsp butter', '1 jalapeño, finely diced',
-      '2 tbsp mayonnaise', '2 tbsp sour cream', '1 tbsp lime juice', '35 g crumbled vegetarian feta',
+      '2 tbsp egg-free mayonnaise', '2 tbsp sour cream', '1 tbsp lime juice', '35 g crumbled vegetarian feta',
       '1/2 tsp mild chilli powder', '2 tbsp chopped coriander leaves'
     ],
     steps: [
@@ -587,8 +587,9 @@ window.KitchenSeeds.push(...[
   },
   {
     id: 'tomato-egg-stir-fry', title: 'Tomato & Egg Stir-Fry', cuisine: 'Chinese',
+    protein: 'Egg',
     description: 'Tender egg curds fold into a quick sauce of ripe tomatoes, spring onions and a pinch of sugar.',
-    diet: ['Vegetarian', 'Dairy-free', 'Gluten-free'], category: 'Lunch', time: 15, servings: 2, image: 'tomato-egg-stir-fry.webp',
+    diet: ['Vegetarian', 'Contains egg', 'Dairy-free', 'Gluten-free'], category: 'Lunch', time: 15, servings: 2, image: 'tomato-egg-stir-fry.webp',
     ingredients: [
       '4 eggs', '1/2 tsp salt, divided', '1 tbsp neutral oil, divided', '3 ripe tomatoes, cut into wedges',
       '2 spring onions, whites and greens separated and chopped', '1/2 tsp sugar', '2 tbsp water'
@@ -679,8 +680,9 @@ window.KitchenSeeds.push(...[
   },
   {
     id: 'bibimbap', title: 'Garden Vegetable Bibimbap', cuisine: 'Korean',
+    protein: 'Egg',
     description: 'Arrange warm rice, sesame vegetables and a fried egg in separate sections, then mix them together with gochujang at the table.',
-    diet: ['Vegetarian', 'Dairy-free'], category: 'Dinner', time: 35, servings: 2, image: 'bibimbap.webp',
+    diet: ['Vegetarian', 'Contains egg', 'Dairy-free'], category: 'Dinner', time: 35, servings: 2, image: 'bibimbap.webp',
     ingredients: [
       '2 cups hot cooked short-grain rice', '1 carrot, cut into thin matchsticks',
       '150 g fresh mushrooms, sliced', '120 g spinach', '1 small courgette, cut into matchsticks',
@@ -691,7 +693,7 @@ window.KitchenSeeds.push(...[
       'Whisk the gochujang, vinegar, water and half the sesame oil in a small bowl to make the mixing sauce.',
       'Wilt the spinach in a covered pan with a spoonful of water. Drain and gently squeeze, then toss with the remaining sesame oil and a pinch of the salt.',
       'Using the neutral oil a little at a time, sauté the carrot, courgette and mushrooms separately in the same pan, seasoning lightly with the remaining salt. Allow 2–3 minutes for each vegetable and 4–5 minutes for the mushrooms. Set each aside separately.',
-      'Use the remaining oil to fry the eggs to your liking. Divide the hot rice between two bowls. Arrange the vegetables in groups on top, add an egg and sesame seeds, and serve with the gochujang sauce for mixing.'
+      'Fry the eggs in the remaining oil until the whites and yolks are firm. Divide the hot rice between two bowls, arrange the vegetables in groups on top, then add an egg and sesame seeds. Serve with the gochujang sauce for mixing.'
     ]
   },
   {
@@ -744,4 +746,155 @@ window.KitchenSeeds.push(...[
   }
 ].map(recipe => ({
   ...recipe, status: 'approved', author: 'Supperclub Kitchen', baseRating: 0, baseCount: 0
+})));
+
+// Food thermometer targets follow the FoodSafety.gov Safe Minimum Internal Temperatures chart.
+// https://www.foodsafety.gov/food-safety-charts/safe-minimum-internal-temperatures
+window.KitchenSeeds.push(...[
+  {
+    id: 'pepper-chicken-fry', title: 'Curry Leaf Pepper Chicken', cuisine: 'Indian', protein: 'Chicken',
+    diet: ['Non-vegetarian', 'Dairy-free', 'Gluten-free'], category: 'Dinner', time: 35, servings: 3,
+    description: 'Coarsely crushed pepper catches on the chicken as the onions cook down. A handful of curry leaves perfumes the whole pan.',
+    ingredients: ['450 g boneless chicken thighs, cut into 3 cm pieces', '2 tsp black peppercorns', '1 tsp fennel seeds', '1 tbsp coconut oil', '12 curry leaves, patted dry', '1 large onion, thinly sliced', '1 tbsp grated ginger', '3 garlic cloves, crushed', '1/4 tsp ground turmeric', '1/2 tsp salt', '60 ml water', '1 tsp fresh lime juice'],
+    steps: [
+      'Coarsely crush the peppercorns and fennel together. Rub the chicken with the turmeric, salt and half of the crushed spices.',
+      'Heat the oil over medium heat. Add the dry curry leaves carefully, then the onion. Stir for 6–8 minutes until the onion edges brown. Add ginger and garlic and cook for another minute.',
+      'Add the chicken and stir for 3 minutes. Pour in the water, cover, and simmer gently. Check the thickest pieces with a thermometer after 10 minutes and continue cooking until they reach 74°C.',
+      'Take off the lid, add the reserved spices, and stir over medium-high heat until the juices cling to the chicken. Finish with the lime juice.'
+    ]
+  },
+  {
+    id: 'fish-pollichathu', title: 'Kerala Banana-Leaf Fish', cuisine: 'Indian', protein: 'Fish',
+    diet: ['Non-vegetarian', 'Dairy-free', 'Gluten-free'], category: 'Dinner', time: 45, servings: 2,
+    description: 'A parcel of spiced shallots and tomato steams around each fish fillet. Open the leaves at the table to catch the aroma.',
+    ingredients: ['2 skinless firm white fish fillets, 150 g each', '2 pieces food-safe banana leaf, about 30 cm square, or baking parchment', '1 tbsp coconut oil', '150 g shallots, thinly sliced', '1 tsp grated ginger', '2 garlic cloves, chopped', '8 curry leaves, patted dry', '1 medium tomato, diced', '1/2 tsp mild chilli powder', '1/4 tsp ground turmeric', '1/2 tsp salt', '2 tsp fresh lime juice'],
+    steps: [
+      'Heat the oven to 200°C. Rinse the banana leaves and soften them in a pan of hot water for 1 minute, then pat dry. If using parchment, lay out two sheets.',
+      'Heat coconut oil in a frying pan. Cook the shallots and curry leaves for 5 minutes, then add ginger and garlic. Stir in the tomato, chilli, turmeric and half the salt. Cook for 5–7 minutes until thick.',
+      'Season the fish with the remaining salt and lime. Place a spoonful of masala in the center of each leaf, add a fillet and cover with the rest of the masala. Fold into parcels and put seam-side down in a baking dish.',
+      'Bake for 15 minutes, then carefully open a parcel and check the center of the fillet. Continue baking until it reaches 63°C. Open the parcels away from your face and serve with the masala.'
+    ]
+  },
+  {
+    id: 'chicken-piccata', title: 'Lemon & Caper Chicken Piccata', cuisine: 'Italian', protein: 'Chicken',
+    diet: ['Non-vegetarian'], category: 'Dinner', time: 30, servings: 2,
+    description: 'Thin chicken cutlets pick up a golden crust. Lemon, capers and a knob of cold butter turn the pan juices into a glossy sauce.',
+    ingredients: ['300 g boneless chicken breast', '1/3 tsp salt', '1/4 tsp black pepper', '3 tbsp plain flour', '1 tbsp olive oil', '120 ml low-sodium chicken stock', '2 tbsp lemon juice', '1 tbsp capers, rinsed', '20 g cold unsalted butter, cubed', '1 tbsp chopped flat-leaf parsley'],
+    steps: [
+      'Slice the chicken horizontally into even cutlets, about 1 cm thick. Season with salt and pepper and dust lightly in flour. Discard excess flour that touched raw chicken.',
+      'Heat the olive oil in a wide frying pan. Brown the cutlets over medium-high heat for about 3 minutes per side. Transfer to a plate.',
+      'Lower the heat, add the stock, and loosen the browned bits with a wooden spoon. Stir in lemon juice and capers. Return the chicken and any juices to the pan and simmer until the thickest cutlet reaches 74°C.',
+      'Transfer the cooked cutlets to clean plates. Take the sauce off the heat, swirl in the cold butter, and spoon over the chicken. Scatter parsley on top.'
+    ]
+  },
+  {
+    id: 'shrimp-linguine', title: 'Garlic Shrimp Linguine', cuisine: 'Italian', protein: 'Shellfish',
+    diet: ['Non-vegetarian', 'Dairy-free'], category: 'Dinner', time: 25, servings: 2,
+    description: 'Sweet shrimp and split cherry tomatoes coat strands of pasta in a light garlic sauce, finished with lemon zest.',
+    ingredients: ['180 g dried durum-wheat linguine', '220 g raw peeled and deveined shrimp', '180 g cherry tomatoes, halved', '3 garlic cloves, thinly sliced', '2 tbsp olive oil', '1/4 tsp chilli flakes', '1/2 tsp grated lemon zest', '1 tbsp chopped parsley', '1/2 tsp salt, plus salt for the pasta water'],
+    steps: [
+      'Cook the linguine in salted boiling water to just shy of tender, according to its packet. Reserve a mug of pasta water before draining.',
+      'Heat the olive oil over medium heat. Soften the garlic and chilli for 1 minute without browning them. Add tomatoes and salt, and cook for 4–5 minutes, crushing a few tomatoes.',
+      'Pat the shrimp dry and add to the tomato mixture. Turn once and cook until their centers are pearly and opaque throughout, checking one of the largest.',
+      'Toss in the linguine with a few spoonfuls of its water. Stir until the sauce clings to the pasta. Add lemon zest and parsley just before serving.'
+    ]
+  },
+  {
+    id: 'chicken-tinga-tacos', title: 'Smoky Chicken Tinga Tacos', cuisine: 'Mexican', protein: 'Chicken',
+    diet: ['Non-vegetarian', 'Dairy-free'], category: 'Dinner', time: 45, servings: 3,
+    description: 'Chicken thighs gently cook in tomato and chipotle until they shred easily. A little raw onion and lime balances the smoky filling.',
+    ingredients: ['450 g boneless chicken thighs', '1 tbsp neutral oil', '1 large onion, thinly sliced', '2 garlic cloves, minced', '300 g crushed tomatoes', '1 chipotle pepper in adobo, finely chopped', '1 tsp adobo sauce', '1/2 tsp dried oregano', '1/2 tsp salt', '120 ml water', '6 small corn tortillas', '2 tbsp finely diced white onion', '2 tbsp coriander leaves', '1 lime, cut into wedges'],
+    steps: [
+      'Warm the oil in a lidded pan. Soften the sliced onion for 6 minutes. Add the garlic, chipotle, adobo sauce and oregano and stir for 1 minute.',
+      'Pour in the tomatoes, salt and water. Nestle in the chicken, bring to a simmer, and cover. Check after 15 minutes and continue until the largest thigh reaches 74°C and shreds easily.',
+      'Lift the chicken onto a clean board and shred with two forks. Reduce the uncovered sauce for a few minutes, then return the shredded chicken and stir until coated.',
+      'Warm each tortilla in a dry pan. Divide the tinga between the tortillas and top with the diced onion and coriander. Pass the lime wedges separately.'
+    ]
+  },
+  {
+    id: 'fish-veracruz', title: 'Veracruz-Style Fish with Olives', cuisine: 'Mexican', protein: 'Fish',
+    diet: ['Non-vegetarian', 'Dairy-free', 'Gluten-free'], category: 'Dinner', time: 35, servings: 2,
+    description: 'A tomato braise with green olives, capers and pickled jalapeño turns two fillets into a bright one-pan dinner.',
+    ingredients: ['2 firm white fish fillets, 160 g each', '1 tbsp olive oil', '1/2 onion, thinly sliced', '2 garlic cloves, minced', '1 small green pepper, thinly sliced', '300 g chopped tomatoes', '8 pitted green olives, sliced', '1 tbsp capers, rinsed', '1 tbsp sliced pickled jalapeño', '1/2 tsp dried oregano', '60 ml water', '1/4 tsp salt', '1/2 lime, cut into wedges'],
+    steps: [
+      'Warm the oil in a frying pan with a lid. Soften the onion and pepper for 6 minutes, then stir in the garlic.',
+      'Add tomatoes, olives, capers, jalapeño, oregano and water. Simmer uncovered for 8 minutes until the sauce starts to thicken.',
+      'Season both fillets with salt. Sit them in the sauce and spoon some over the top, then cover and simmer gently. Check after 6 minutes and continue until each center reaches 63°C.',
+      'Lift the fish onto plates, spoon the olives and sauce alongside, and finish with a squeeze of fresh lime.'
+    ]
+  },
+  {
+    id: 'ginger-scallion-fish', title: 'Steamed Ginger & Scallion Fish', cuisine: 'Chinese', protein: 'Fish',
+    diet: ['Non-vegetarian', 'Dairy-free'], category: 'Dinner', time: 25, servings: 2,
+    description: 'Thin ginger matchsticks lift the fish above its cooking juices. A warm ginger-soy dressing and scallion ribbons finish the dish.',
+    ingredients: ['2 white fish fillets, 150 g each', '20 g fresh ginger, cut into matchsticks', '3 scallions, cut into fine strips', '1 tbsp light soy sauce', '2 tbsp water', '1/2 tsp sugar', '1 tsp toasted sesame oil', '1 tsp neutral oil'],
+    steps: [
+      'Set a steamer basket over simmering water. Choose a heatproof plate that fits inside with space around its edge for steam.',
+      'Lay half the ginger under the fish on the plate. Scatter the remaining ginger on top, put the plate in the basket and cover. Check after 8 minutes and continue steaming until the center of each fillet reaches 63°C.',
+      'Heat the neutral oil in a small pan and stir in the scallions for 20 seconds. Add soy sauce, water and sugar and warm until the sugar dissolves, then stir in the sesame oil.',
+      'Lift the fish onto a serving plate and spoon the hot scallion dressing over both portions.'
+    ]
+  },
+  {
+    id: 'kung-pao-chicken', title: 'Kung Pao Chicken with Peanuts', cuisine: 'Chinese', protein: 'Chicken',
+    diet: ['Non-vegetarian', 'Dairy-free'], category: 'Dinner', time: 30, servings: 2,
+    description: 'Toasted peanuts and scallion pieces bring crunch to a Sichuan-style chicken stir-fry with a tangy black vinegar glaze.',
+    ingredients: ['320 g boneless chicken thighs, cut into 2 cm pieces', '2 tbsp light soy sauce, divided', '2 tsp cornflour, divided', '1 tbsp Chinese black vinegar', '2 tsp sugar', '3 tbsp water', '1 tbsp neutral oil', '3 dried red chillies, broken in half', '1/2 tsp crushed Sichuan peppercorns', '2 garlic cloves, sliced', '2 tsp grated ginger', '3 scallions, cut into 2 cm lengths', '35 g unsalted roasted peanuts'],
+    steps: [
+      'Coat the chicken in half the soy sauce and half the cornflour. In a separate clean bowl mix the remaining soy sauce and cornflour with vinegar, sugar and water.',
+      'Heat the oil over medium-high heat in a large wok or frying pan. Stir-fry the chicken in a single layer, turning as the edges brown.',
+      'Push chicken to the edges. Briefly toast the chillies and peppercorns in the center, then add the garlic, ginger and scallions. Toss everything together and stir-fry until the largest chicken pieces reach 74°C.',
+      'Stir the sauce again, pour it around the sides and toss until glossy. Fold in the roasted peanuts and serve immediately.'
+    ]
+  },
+  {
+    id: 'chicken-yakitori', title: 'Chicken & Scallion Yakitori', cuisine: 'Japanese', protein: 'Chicken',
+    diet: ['Non-vegetarian', 'Dairy-free'], category: 'Dinner', time: 35, servings: 2,
+    description: 'Short skewers alternate juicy chicken and scallion. A sweet soy glaze caramelizes at the edges on the grill.',
+    ingredients: ['350 g boneless chicken thighs, cut into 2.5 cm pieces', '4 thick scallions, cut into 3 cm lengths', '3 tbsp Japanese soy sauce', '2 tbsp mirin', '2 tbsp water', '1 tbsp sugar', '1 tsp neutral oil'],
+    steps: [
+      'Use short metal skewers. Combine soy sauce, mirin, water and sugar in a small pan and simmer for 5 minutes, until lightly syrupy. Set the glaze aside in a clean bowl.',
+      'Thread the chicken and scallions alternately onto the skewers, leaving a little space between pieces. Lightly oil a grill pan and heat it over medium-high heat.',
+      'Grill the skewers, turning every few minutes to brown each side. Begin checking the largest pieces after 10 minutes and keep cooking until the chicken reaches 74°C.',
+      'With a clean brush, coat the cooked skewers with glaze. Turn them for another 30–60 seconds until glossy, watching closely to keep the sugar from burning.'
+    ]
+  },
+  {
+    id: 'salmon-teriyaki', title: 'Skillet Teriyaki Salmon', cuisine: 'Japanese', protein: 'Fish',
+    diet: ['Non-vegetarian', 'Dairy-free'], category: 'Dinner', time: 25, servings: 2,
+    description: 'In the pan, mirin and soy cook down to a glaze that clings to the salmon. Plain rice catches every last spoonful.',
+    ingredients: ['2 skin-on salmon fillets, 150 g each', '1 tsp neutral oil', '2 tbsp Japanese soy sauce', '2 tbsp mirin', '2 tbsp water', '1 tsp brown sugar', '2 cups hot cooked short-grain rice', '1 tsp toasted sesame seeds', '1 scallion, finely sliced'],
+    steps: [
+      'Pat the salmon skin dry. In a bowl stir soy sauce, mirin, water and sugar together.',
+      'Warm the oil in a nonstick frying pan over medium heat. Put the salmon in skin-side down and press lightly for a few seconds. Cook for about 4 minutes to crisp the skin.',
+      'Turn the fillets and lower the heat. Add the sauce and spoon it over the salmon as it bubbles. If it reduces too quickly, add a spoonful of water. Cook until the thickest part reaches 63°C.',
+      'Divide the rice between two plates. Set the salmon on top, drizzle with the remaining glaze, and scatter sesame seeds and scallion over the rice.'
+    ]
+  },
+  {
+    id: 'dakgalbi', title: 'Chuncheon-Style Spicy Chicken Dakgalbi', cuisine: 'Korean', protein: 'Chicken',
+    diet: ['Non-vegetarian', 'Dairy-free'], category: 'Dinner', time: 40, servings: 3,
+    description: 'Gochujang turns chicken, cabbage and sweet potato a deep brick red as they cook together in a wide skillet.',
+    ingredients: ['450 g boneless chicken thighs, cut into 3 cm pieces', '2 tbsp gochujang', '1 tbsp light soy sauce', '1 tsp mild gochugaru', '1 tsp sugar', '3 garlic cloves, minced', '1 tsp grated ginger', '1 tsp toasted sesame oil', '1 tbsp neutral oil', '1 small sweet potato, cut into thin half-moons', '180 g cabbage, cut into squares', '1 small onion, sliced', '90 ml water', '2 scallions, sliced'],
+    steps: [
+      'Stir gochujang, soy sauce, gochugaru, sugar, garlic, ginger and sesame oil into a paste. Coat the chicken in the paste.',
+      'Heat the neutral oil in a wide lidded skillet over medium heat. Add the sweet potato and onion and cook for 3 minutes, stirring. Add cabbage, the chicken with its paste, and the water.',
+      'Cover and cook gently for 8 minutes. Uncover and stir, scraping the bottom of the pan. Add a splash of water if needed, and continue until the sweet potato is tender and the largest chicken pieces reach 74°C.',
+      'Toss in the scallions and cook uncovered for another minute, until the sauce coats the cabbage and chicken. Serve directly from the skillet.'
+    ]
+  },
+  {
+    id: 'bulgogi-beef', title: 'Pear-Marinated Beef Bulgogi', cuisine: 'Korean', protein: 'Beef',
+    diet: ['Non-vegetarian', 'Dairy-free'], category: 'Dinner', time: 40, servings: 2,
+    description: 'Grated pear sweetens a quick marinade for thin slices of beef. Searing in small batches gives the meat its browned edges.',
+    ingredients: ['320 g sirloin steak, sliced across the grain into thin strips', '1/2 ripe pear, peeled and grated', '2 tbsp light soy sauce', '1 tsp brown sugar', '2 garlic cloves, minced', '1 tsp toasted sesame oil', '1/4 tsp black pepper', '1 small onion, sliced', '2 tsp neutral oil', '2 cups hot cooked rice', '1 scallion, sliced', '1 tsp toasted sesame seeds'],
+    steps: [
+      'Mix pear, soy sauce, sugar, garlic, sesame oil and pepper in a bowl. Add beef and onion and refrigerate for 15 minutes.',
+      'Lift the beef and onions from the marinade, letting the excess drip back. Discard the used marinade. Heat half the neutral oil in a heavy frying pan over medium-high heat.',
+      'Spread half the beef and onions over the pan. Sear in a single layer, then turn and cook until browned and the beef reaches 63°C. Transfer to a clean plate and repeat with the remaining oil and beef.',
+      'Let each batch rest for at least 3 minutes. Spoon onto bowls of rice and finish with scallion and sesame seeds.'
+    ]
+  }
+].map(recipe => ({
+  ...recipe, image: recipe.id + '.webp', author: 'Supperclub Kitchen', status: 'approved', baseCount: 0, baseRating: 0
 })));

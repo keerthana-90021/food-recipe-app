@@ -1,7 +1,8 @@
 import React from 'react';
 
 const paths = {
-  bowl: <><path d="M2 12h20c-1 6-4.5 9-10 9s-9-3-10-9ZM8 22h8M7 8c-2-2 2-3 1-5m4 5c-2-2 2-3 1-5m4 5c-2-2 2-3 1-5"/></>,
+  bowl: <><path d="M2 12h20c-1 6-4.5 9-10 9s-9-3-10-9ZM8 22h8"/><g className="bowl-steam"><path d="M7 8c-2-2 2-3 1-5m4 5c-2-2 2-3 1-5m4 5c-2-2 2-3 1-5"/></g></>,
+  shuffle: <><path d="M3 6h3c4 0 7 12 12 12h2m-4-3 4 3-4 3M3 18h3c2 0 3-2 4-4m4-5c1-2 3-3 4-3h2m-4-3 4 3-4 3"/></>,
   bookmark: <path d="M6 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17l-6-4-6 4Z"/>,
   clock: <><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2"/></>,
   users: <><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2m0-15a3 3 0 0 1 0 6m3 3c2 1 3 2 3 5"/></>,
